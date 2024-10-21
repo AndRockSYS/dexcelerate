@@ -22,18 +22,18 @@ module dexcelerate::slot {
 
 	// Events
 
-	public struct SlotCreated has copy, drop {
+	public struct SlotCreated has copy, drop, store {
 		slot: address,
 		owner: address
 	}
 
-	public struct Deposit has copy, drop {
+	public struct Deposit has copy, drop, store {
 		slot: address,
 		token: String,
 		amount: u64
 	}
 
-	public struct Withdraw has copy, drop {
+	public struct Withdraw has copy, drop, store {
 		slot: address,
 		token: String,
 		amount: u64
