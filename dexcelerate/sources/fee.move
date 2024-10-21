@@ -1,5 +1,6 @@
 module dexcelerate::fee {
 	use sui::sui::{SUI};
+	use sui::coin::{Coin};
 	use sui::balance::{Self, Balance};
 
 	use sui::event;
@@ -71,6 +72,13 @@ module dexcelerate::fee {
 		});
 
 		transfer::public_share_object(manager);
+	}
+
+	public entry fun add_to_balance(
+		fee_manager: &mut FeeManager,
+		coin: Coin<SUI>
+	) {
+		balance::join<SUI>(&mut fee_manager.balance, coin.into_balance());
 	}
 
 	public entry fun reset(
