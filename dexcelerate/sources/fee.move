@@ -92,7 +92,7 @@ module dexcelerate::fee {
 		id.delete();
 	}
 
-	public entry fun add_to_balance(
+	public entry fun add_fee(
 		fee_manager: &mut FeeManager,
 		coin: Coin<SUI>
 	) {

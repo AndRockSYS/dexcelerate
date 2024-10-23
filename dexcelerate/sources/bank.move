@@ -76,7 +76,7 @@ module dexcelerate::bank {
 		event::emit(SignerUpdated {new_signer});
 	}
 
-	public entry fun receive_fee(
+	public entry fun add_to_bank(
 		bank: &mut Bank,
 		coin: Coin<SUI>,
 		ctx: &TxContext
