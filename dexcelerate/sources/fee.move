@@ -27,7 +27,7 @@ module dexcelerate::fee {
 		reset_counter: vector<address>,
 		withdraw_counter: vector<address>,
 
-		cold: VecMap<address, bool>
+		cold: VecMap<address, bool> // Removed double cold declaration that was previously
 	}
 
 	// Events
