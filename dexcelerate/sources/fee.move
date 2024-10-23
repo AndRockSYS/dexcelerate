@@ -16,6 +16,10 @@ module dexcelerate::fee {
 
 	const EAlreadyVoted: u64 = 6;
 
+	public struct FeeManagerWitness has key {
+		id: UID
+	}
+
 	public struct FeeManager has key, store {
 		id: UID,
 		balance: Balance<SUI>,
@@ -42,7 +46,32 @@ module dexcelerate::fee {
 		amount: u64
 	}
 
-	public entry fun new_fee_manager(wallets: vector<address>, ctx: &mut TxContext) {
+	fun init(ctx: &mut TxContext) {
+		let empty_addresses = vector::empty<address>();
+
+		let manager = FeeManager {
+			id: object::new(ctx),
+			balance: balance::zero<SUI>(),
+			reset_counter: empty_addresses,
+			withdraw_counter: empty_addresses,
+			cold: vec_map::empty<address, bool>()
+		};
+
+		event::emit(FeeManagerCreated {
+			manager_address: object::id_address(&manager)
+		});
+
+		transfer::public_share_object(manager);
+		transfer::transfer(FeeManagerWitness {
+			id: object::new(ctx)
+		}, ctx.sender());
+	}
+
+	public entry fun initialize_fee_manager(
+		witness: FeeManagerWitness,
+		manager: &mut FeeManager,
+		wallets: vector<address>
+	) {
 		let wallets_length = wallets.length();
 		assert!(wallets_length > 2, ENotEnoughUniqueWallets);
 
@@ -57,21 +86,10 @@ module dexcelerate::fee {
 			i = i + 1;
 		};
 
-		let empty_addresses = vector::empty<address>();
+		*&mut manager.cold = cold;
 
-		let manager = FeeManager {
-			id: object::new(ctx),
-			balance: balance::zero<SUI>(),
-			reset_counter: empty_addresses,
-			withdraw_counter: empty_addresses,
-			cold
-		};
-
-		event::emit(FeeManagerCreated {
-			manager_address: object::id_address(&manager)
-		});
-
-		transfer::public_share_object(manager);
+		let FeeManagerWitness {id} = witness;
+		id.delete();
 	}
 
 	public entry fun add_to_balance(
