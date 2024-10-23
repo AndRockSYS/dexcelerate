@@ -94,7 +94,7 @@ module dexcelerate::slot {
 		};
 	}
 
-	fun take_from_balance<T>(slot: &mut Slot, amount: u64): Balance<T> {
+	public(package) fun take_from_balance<T>(slot: &mut Slot, amount: u64): Balance<T> {
 		let coin_type = type_name::get<T>().into_string();
 		assert!(bag::contains<String>(&slot.balances, coin_type), ESlotHasNoType);
 
@@ -102,5 +102,9 @@ module dexcelerate::slot {
 		assert!(balance::value<T>(coin_balance) >= amount, EBalanceIsLow);
 
 		balance::withdraw_all<T>(coin_balance)
+	}
+
+	public fun get_owner(slot: &Slot): address {
+		*&slot.owner
 	}
 }
