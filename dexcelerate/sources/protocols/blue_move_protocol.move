@@ -6,8 +6,6 @@ module dexcelerate::blue_move_protocol {
 	use blue_move::router;
 	use blue_move::swap::{Dex_Info};
 
-	const ENotASlotOwner: u64 = 0;
-
 	public entry fun swap_exact_input_slot<A, B>(
 		slot: &mut Slot,
 		amount_in: u64,
@@ -15,8 +13,7 @@ module dexcelerate::blue_move_protocol {
 		dex_info: &mut Dex_Info,
 		ctx: &mut TxContext
 	) {
-		assert!(slot::get_owner(slot) == ctx.sender(), ENotASlotOwner);
-		let balance_in = slot::take_from_balance<A>(slot, amount_in);
+		let balance_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
 		let swapped = swap_exact_input_coin<A, B>(
 			coin::from_balance<A>(balance_in, ctx), 
 			amount_out_min,

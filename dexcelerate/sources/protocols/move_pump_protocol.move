@@ -9,8 +9,6 @@ module dexcelerate::move_pump_protocol {
 
 	use dexcelerate::slot::{Self, Slot};
 
-	const ENotASlotOwner: u64 = 0;
-
 	public entry fun swap_sui_for_coin<T>(
 		config: &mut Configuration, 
 		dex_info: &mut Dex_Info, 
@@ -20,9 +18,7 @@ module dexcelerate::move_pump_protocol {
 		clock: &Clock, 
 		ctx: &mut TxContext
 	) {
-		assert!(slot::get_owner(slot) == ctx.sender(), ENotASlotOwner);
-
-		let balance_in = slot::take_from_balance<SUI>(slot, amount_in);
+		let balance_in = slot::take_from_balance<SUI>(slot, amount_in, true, ctx);
 		let (coin_in_left, coin_out) = move_pump::buy_returns<T>(
 			config, 
 			coin::from_balance<SUI>(balance_in, ctx), 

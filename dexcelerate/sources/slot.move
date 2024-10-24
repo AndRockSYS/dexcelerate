@@ -92,9 +92,7 @@ module dexcelerate::slot {
 		dex_info: &mut Dex_Info,
 		ctx: &mut TxContext
 	) {
-		assert!(*&slot.owner == ctx.sender(), ENotASlotOwner);
-
-		let balance_in = take_from_balance<T>(slot, amount);
+		let balance_in = take_from_balance<T>(slot, amount, true, ctx);
 		let amount = balance_in.value();
 
 		let token_type = type_name::get<T>().into_string();
@@ -130,7 +128,16 @@ module dexcelerate::slot {
 		};
 	}
 
-	public(package) fun take_from_balance<T>(slot: &mut Slot, amount: u64): Balance<T> {
+	public(package) fun take_from_balance<T>(
+		slot: &mut Slot, 
+		amount: u64, 
+		check_sender: bool,
+		ctx: &mut TxContext
+	): Balance<T> {
+		if(check_sender) {
+			assert!(*&slot.owner == ctx.sender(), ENotASlotOwner);
+		};
+
 		let coin_type = type_name::get<T>().into_string();
 		assert!(bag::contains<String>(&slot.balances, coin_type), ESlotHasNoType);
 

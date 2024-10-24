@@ -7,8 +7,6 @@ module dexcelerate::turbos_clmm_protocol {
 	use turbos_clmm::pool::{Pool, Versioned};
 	use turbos_clmm::swap_router;
 
-	const ENotASlotOwner: u64 = 0;
-
 	public entry fun swap_a_to_b<A, B, FeeType>(
 		slot: &mut Slot,
 		pool: &mut Pool<A, B, FeeType>,
@@ -21,8 +19,7 @@ module dexcelerate::turbos_clmm_protocol {
 		versioned: &Versioned,
 		ctx: &mut TxContext
 	) {
-		assert!(slot::get_owner(slot) == ctx.sender(), ENotASlotOwner);
-		let balance_in = slot::take_from_balance<A>(slot, amount_in);
+		let balance_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
 
 		let mut coins_a = vector::empty<Coin<A>>();
 		coins_a.push_back(coin::from_balance<A>(balance_in, ctx));
