@@ -2,10 +2,11 @@
 
 [move]
 version = 2
-manifest_digest = "EC7FED924B0C3AA49AF2F723733E01E8525B00997FD740ED9A05B65EC89FC114"
-deps_digest = "060AD7E57DFB13104F21BE5F5C3759D03F0553FC3229247D9A7A6B45F50D03A3"
+manifest_digest = "D503DD229EE28E74FF2B19E7CAF61C29DE74917E1476DF25638A718D3DF7330E"
+deps_digest = "F9B494B64F0615AED0E98FC12A85B85ECD2BC5185C22D30E7F67786BB52E507C"
 dependencies = [
   { name = "Sui" },
+  { name = "TurbosCLMM" },
   { name = "blue_move" },
   { name = "move_pump" },
 ]
@@ -20,6 +21,14 @@ source = { git = "https://github.com/MystenLabs/sui.git", rev = "framework/testn
 
 dependencies = [
   { name = "MoveStdlib" },
+]
+
+[[move.package]]
+name = "TurbosCLMM"
+source = { git = "https://github.com/turbos-finance/turbos-sui-move-interface.git", rev = "framework/mainnet", subdir = "clmm" }
+
+dependencies = [
+  { name = "Sui" },
 ]
 
 [[move.package]]
