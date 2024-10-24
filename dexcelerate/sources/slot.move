@@ -63,21 +63,27 @@ module dexcelerate::slot {
 		dex_info: &mut Dex_Info, 
 		ctx: &mut TxContext
 	) {
-		let coin_out: Coin<SUI> = router::swap_exact_input_<T, SUI>(
-			coin_in.value(), 
-			coin_in, 
-			0, // ! amount out min 
-			dex_info, 
-			ctx
-		);
+		let amount = coin_in.value();
+		let token_type = type_name::get<T>().into_string();
 
+		if(token_type == type_name::get<SUI>().into_string()) {
+			add_to_balance<T>(slot, coin_in.into_balance<T>());
+		} else {
+			let coin_out: Coin<SUI> = router::swap_exact_input_<T, SUI>(
+				coin_in.value(), 
+				coin_in, 
+				0, // ! amount out min 
+				dex_info, 
+				ctx
+			);
+			add_to_balance<SUI>(slot, coin_out.into_balance<SUI>());
+		};
+	
 		event::emit(Deposit {		
 			slot: object::id_address(slot),
-			token: type_name::get<T>().into_string(),
-			amount: coin_in.value()
+			token: token_type,
+			amount
 		});
-
-		add_to_balance<SUI>(slot, coin_out.into_balance<SUI>());
 	}
 
 	public entry fun withdraw<T>(
@@ -89,21 +95,28 @@ module dexcelerate::slot {
 		assert!(*&slot.owner == ctx.sender(), ENotASlotOwner);
 
 		let balance_in = take_from_balance<T>(slot, amount);
-		let coin_out: Coin<SUI> = router::swap_exact_input_<T, SUI>(
-			balance_in.value(), 
-			coin::from_balance<T>(balance_in, ctx), 
-			0, // ! amount out min 
-			dex_info, 
-			ctx
-		);
+		let amount = balance_in.value();
 
-		event::emit(Deposit {		
+		let token_type = type_name::get<T>().into_string();
+
+		if(token_type == type_name::get<SUI>().into_string()) {
+			transfer::public_transfer(coin::from_balance<T>(balance_in, ctx), ctx.sender());
+		} else {
+			let coin_out: Coin<SUI> = router::swap_exact_input_<T, SUI>(
+				balance_in.value(), 
+				coin::from_balance<T>(balance_in, ctx), 
+				0, // ! amount out min 
+				dex_info, 
+				ctx
+			);
+			transfer::public_transfer(coin_out, ctx.sender());
+		};
+
+		event::emit(Withdraw {		
 			slot: object::id_address(slot),
 			token: type_name::get<T>().into_string(),
 			amount
 		});
-
-		transfer::public_transfer(coin_out, ctx.sender());
 	}
 
 	public(package) fun add_to_balance<T>(slot: &mut Slot, balance: Balance<T>) {

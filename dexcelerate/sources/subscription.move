@@ -45,11 +45,6 @@ module dexcelerate::subscription {
 		amount: u64
 	}
 
-	public struct Withdrawn has copy, drop, store {
-		to: address,
-		amount: u64
-	}
-
 	public struct Payment has copy, drop, store {
 		payment_info: String,
 		amount: u64
@@ -209,7 +204,7 @@ module dexcelerate::subscription {
 		fee_manager: &mut FeeManager,
 		bank: &mut Bank,
 		item_info: String,
-		payment: Coin<SUI>,
+		mut payment: Coin<SUI>,
 		user_fee_percent: u64,
 		ctx: &mut TxContext
 	) {
@@ -223,7 +218,7 @@ module dexcelerate::subscription {
 		event::emit(BankFeePayed {amount: dex_fee});
 		event::emit(Payment {
 			payment_info: item_info,
-			amount: payment.value()
+			amount: dex_fee + user_fee
 		});
 	}
 }

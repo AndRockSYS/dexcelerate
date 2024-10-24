@@ -11,7 +11,7 @@ Sui = { override = true, git = "https://github.com/MystenLabs/sui.git", subdir =
 blue_move = { local = "../lib/blue_move" }
 move_pump = { local = "../lib/move_pump" }
 TurbosCLMM = { git = "https://github.com/turbos-finance/turbos-sui-move-interface.git", subdir = "clmm", rev = "framework/mainnet" }
-# CetusClmm = { git = "https://github.com/CetusProtocol/cetus-clmm-interface.git", subdir = "sui/clmmpool", rev = "framework/mainnet" }
+
 # deepbook = { git = "https://github.com/MystenLabs/deepbookv3", subdir = "packages/deepbook", rev = "framework/testnet" }
 # token = { git = "https://github.com/MystenLabs/deepbookv3", subdir = "packages/token", rev = "framework/testnet" }
 

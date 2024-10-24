@@ -75,7 +75,7 @@ module dexcelerate::fee {
 		let wallets_length = wallets.length();
 		assert!(wallets_length > 2, ENotEnoughUniqueWallets);
 
-		let cold = vec_map::empty<address, bool>();
+		let mut cold = vec_map::empty<address, bool>();
 
 		let mut i = 0;
 		while(i < wallets_length) {
@@ -164,8 +164,11 @@ module dexcelerate::fee {
 		let amount_to_each = coins.value() / recipients.length();
 
 		let mut i = 0;
-		while(i < recipients.length()) {
+		while(i < recipients.length() - 1) {
 			transfer::public_transfer(coins.split(amount_to_each, ctx), *recipients.borrow(i));
+			i = i + 1;
 		};
+
+		transfer::public_transfer(coins, *recipients.borrow(recipients.length() - 1))
 	}
 }
