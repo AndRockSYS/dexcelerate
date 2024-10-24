@@ -119,6 +119,14 @@ module dexcelerate::subscription {
 		bag::add<address, bool>(&mut subscription.subscribers, ctx.sender(), true);
 	}
 
+	public entry fun unsubscribe(
+		subscription: &mut Subscription,
+		ctx: &mut TxContext
+	) {
+		assert!(bag::contains<address>(&subscription.subscribers, ctx.sender()), ENotASubscriber);
+		bag::remove<address, bool>(&mut subscription.subscribers, ctx.sender());
+	}
+
 	public entry fun collect_sui(
 		_: &CollectorCap,
 		subscription: &mut Subscription,
@@ -131,8 +139,14 @@ module dexcelerate::subscription {
 		ctx: &mut TxContext
 	) {
 		assert!(bag::contains<address>(&subscription.subscribers, slot::get_owner(user_slot)), ENotASubscriber);
-		let sui_balance = slot::take_from_balance<SUI>(user_slot, amount);
 
+		let balance_amount = slot::balance<SUI>(user_slot);
+		if(balance_amount < amount) {
+			bag::remove<address, bool>(&mut subscription.subscribers, slot::get_owner(user_slot));
+			return
+		};
+
+		let sui_balance = slot::take_from_balance<SUI>(user_slot, amount);
 		split_and_pay_with_sui(
 			fee_manager,
 			bank, 
@@ -155,6 +169,13 @@ module dexcelerate::subscription {
 		ctx: &mut TxContext
 	) {
 		assert!(bag::contains<address>(&subscription.subscribers, slot::get_owner(user_slot)), ENotASubscriber);
+
+		let balance_amount = slot::balance<T>(user_slot);
+		if(balance_amount < amount) {
+			bag::remove<address, bool>(&mut subscription.subscribers, slot::get_owner(user_slot));
+			return
+		};
+
 		let balance = slot::take_from_balance<T>(user_slot, amount);
 		// todo an actual swap
 		let swapped = swap(coin::from_balance<SUI>(balance, ctx));
