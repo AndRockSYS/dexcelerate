@@ -1,19 +1,14 @@
 [package]
-name = "dexcelerate"
+name = "move_pump"
 edition = "2024.beta"
-version = "1.0.0"
+published-at = "0x92fecee99603c0628ced2fbd37f85c05f6c0049c183eb6b1b58db24764c6c7bc"
 # edition = "legacy" to use legacy (pre-2024) Move
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"
 # authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
 
 [dependencies]
-Sui = { override = true, git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet"}
-blue_move = { local = "../lib/blue_move" }
-move_pump = { local = "../lib/move_pump" }
-# TurbosCLMM = { git = "https://github.com/turbos-finance/turbos-sui-move-interface.git", subdir = "clmm", rev = "framework/mainnet" }
-# CetusClmm = { git = "https://github.com/CetusProtocol/cetus-clmm-interface.git", subdir = "sui/clmmpool", rev = "framework/mainnet" }
-# deepbook = { git = "https://github.com/MystenLabs/deepbookv3", subdir = "packages/deepbook", rev = "framework/testnet" }
-# token = { git = "https://github.com/MystenLabs/deepbookv3", subdir = "packages/token", rev = "framework/testnet" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet" }
+blue_move = { local = "../blue_move" }
 
 # For remote import, use the `{ git = "...", subdir = "...", rev = "..." }`.
 # Revision can be a branch, a tag, and a commit hash.
@@ -27,7 +22,7 @@ move_pump = { local = "../lib/move_pump" }
 # Override = { local = "../conflicting/version", override = true }
 
 [addresses]
-dexcelerate = "0x0"
+move_pump = "0x0"
 
 # Named addresses will be accessible in Move as `@name`. They're also exported:
 # for example, `std = "0x1"` is exported by the Standard Library.

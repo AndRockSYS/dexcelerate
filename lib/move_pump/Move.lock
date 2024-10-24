@@ -2,12 +2,11 @@
 
 [move]
 version = 2
-manifest_digest = "EC7FED924B0C3AA49AF2F723733E01E8525B00997FD740ED9A05B65EC89FC114"
-deps_digest = "060AD7E57DFB13104F21BE5F5C3759D03F0553FC3229247D9A7A6B45F50D03A3"
+manifest_digest = "71FB3B61F563C96088096193CE79AB6801CA3587969E1C39F28EA01156761566"
+deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 dependencies = [
   { name = "Sui" },
   { name = "blue_move" },
-  { name = "move_pump" },
 ]
 
 [[move.package]]
@@ -24,19 +23,10 @@ dependencies = [
 
 [[move.package]]
 name = "blue_move"
-source = { local = "../lib/blue_move" }
+source = { local = "../blue_move" }
 
 dependencies = [
   { name = "Sui" },
-]
-
-[[move.package]]
-name = "move_pump"
-source = { local = "../lib/move_pump" }
-
-dependencies = [
-  { name = "Sui" },
-  { name = "blue_move" },
 ]
 
 [move.toolchain-version]
