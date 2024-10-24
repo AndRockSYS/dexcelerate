@@ -2,12 +2,13 @@
 
 [move]
 version = 2
-manifest_digest = "2EC42869F88684067ADD8E4791F69B91E28E35E0C5E562956E18C19EE8B91F72"
-deps_digest = "F9B494B64F0615AED0E98FC12A85B85ECD2BC5185C22D30E7F67786BB52E507C"
+manifest_digest = "6F2FCDCF5CFA2F4BA6AD3269BA96A46C3D05B7652E19D306B40D155C60E0AC68"
+deps_digest = "397E6A9F7A624706DBDFEE056CE88391A15876868FD18A88504DA74EB458D697"
 dependencies = [
   { name = "Sui" },
   { name = "TurbosCLMM" },
   { name = "blue_move" },
+  { name = "flow_x" },
   { name = "move_pump" },
 ]
 
@@ -34,6 +35,14 @@ dependencies = [
 [[move.package]]
 name = "blue_move"
 source = { local = "../lib/blue_move" }
+
+dependencies = [
+  { name = "Sui" },
+]
+
+[[move.package]]
+name = "flow_x"
+source = { local = "../lib/flow_x" }
 
 dependencies = [
   { name = "Sui" },
