@@ -1,5 +1,5 @@
 module dexcelerate::blue_move_protocol {
-	use sui::coin;
+	use sui::coin::{Self, Coin};
 
 	use dexcelerate::slot::{Self, Slot};
 
@@ -14,13 +14,27 @@ module dexcelerate::blue_move_protocol {
 		ctx: &mut TxContext
 	) {
 		let balance_in = slot::take_from_balance<A>(slot, amount_in);
-		let swapped = router::swap_exact_input_<A, B>(
-			balance_in.value(), 
+		let swapped = swap_exact_input_coin<A, B>(
 			coin::from_balance<A>(balance_in, ctx), 
 			amount_out_min,
 			dex_info, 
 			ctx
 		);
 		slot::add_to_balance<B>(slot, coin::into_balance<B>(swapped));
+	}
+
+	public fun swap_exact_input_coin<A, B>(
+		coin_in: Coin<A>,
+		amount_out_min: u64,
+		dex_info: &mut Dex_Info,
+		ctx: &mut TxContext
+	): Coin<B> {
+		router::swap_exact_input_<A, B>(
+			coin_in.value(), 
+			coin_in, 
+			amount_out_min,
+			dex_info, 
+			ctx
+		)
 	}
 }
