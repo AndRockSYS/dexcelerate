@@ -22,7 +22,7 @@ blue_move = { local = "../blue_move" }
 # Override = { local = "../conflicting/version", override = true }
 
 [addresses]
-move_pump = "0x0"
+move_pump = "0x92fecee99603c0628ced2fbd37f85c05f6c0049c183eb6b1b58db24764c6c7bc"
 
 # Named addresses will be accessible in Move as `@name`. They're also exported:
 # for example, `std = "0x1"` is exported by the Standard Library.
