@@ -17,6 +17,9 @@ module dexcelerate::subscription {
 	use dexcelerate::bank::{Self, Bank};
 	use dexcelerate::fee::{Self, FeeManager};
 
+	use blue_move::swap::{Dex_Info};
+	use dexcelerate::blue_move_protocol;
+
 	const ENotASubscriber: u64 = 0;
 
 	public struct CollectorCap has key, store {
@@ -102,16 +105,22 @@ module dexcelerate::subscription {
 		item_info: String,
 		payment: Coin<T>,
 		user_fee_percent: u64,
+		dex_info: &mut Dex_Info,
+		amount_out_min: u64,
 		ctx: &mut TxContext
 	) {
-		// todo an actual swap
-		let swapped = swap(payment);
+		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input_coin(
+			payment,
+			amount_out_min,
+			dex_info,
+			ctx
+		);
 
 		split_and_pay_with_sui(
 			fee_manager,
 			bank, 
 			item_info,
-			swapped, 
+			coin_out, 
 			user_fee_percent,
 			ctx
 		);
@@ -166,6 +175,8 @@ module dexcelerate::subscription {
 		user_slot: &mut Slot,
 		amount: u64,
 		user_fee_percent: u64,
+		dex_info: &mut Dex_Info,
+		amount_out_min: u64,
 		ctx: &mut TxContext
 	) {
 		assert!(bag::contains<address>(&subscription.subscribers, slot::get_owner(user_slot)), ENotASubscriber);
@@ -177,14 +188,18 @@ module dexcelerate::subscription {
 		};
 
 		let balance = slot::take_from_balance<T>(user_slot, amount);
-		// todo an actual swap
-		let swapped = swap(coin::from_balance<SUI>(balance, ctx));
+		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input_coin(
+			coin::from_balance<T>(balance, ctx),
+			amount_out_min,
+			dex_info,
+			ctx
+		);
 
 		split_and_pay_with_sui(
 			fee_manager,
 			bank, 
 			item_info,
-			swapped, 
+			coin_out, 
 			user_fee_percent,
 			ctx
 		);
