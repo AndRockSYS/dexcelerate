@@ -130,4 +130,14 @@ module dexcelerate::slot {
 	public fun get_owner(slot: &Slot): address {
 		*&slot.owner
 	}
+
+	public fun balance<T>(slot: &Slot): u64 {
+		let coin_type = type_name::get<T>().into_string();
+		let mut value = 0;
+		if(bag::contains<String>(&slot.balances, coin_type)) {
+			let balance = bag::borrow<String, Balance<T>>(&slot.balances, coin_type);
+			value = balance::value(balance);
+		};
+		value
+	}
 }
