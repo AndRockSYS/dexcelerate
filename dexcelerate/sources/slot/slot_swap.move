@@ -20,8 +20,7 @@ module dexcelerate::slot_swap {
 		total_fee_percent: u64,
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot.take_from_balance<SUI>(amount_in, true, ctx);
-		let mut coin_in = coin::from_balance<SUI>(balance_in, ctx);
+		let mut coin_in = slot.take_from_balance<SUI>(amount_in, true, ctx);
 
 		coin_in = calc_and_transfer_fees(
 			bank, 
@@ -45,8 +44,7 @@ module dexcelerate::slot_swap {
 		total_fee_percent: u64,
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot.take_from_balance<A>(amount_in, true, ctx);
-		let mut coin_in = coin::from_balance<A>(balance_in, ctx);
+		let mut coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
 
 		// todo swap here
 
@@ -67,6 +65,8 @@ module dexcelerate::slot_swap {
 		ctx: &mut TxContext
 	) {
 		assert!(to_bytes(&type_name::get<SUI>()) == b"0x2::sui::SUI", EWrongSwapType);
+
+		let mut coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
 	}
 
 	public entry fun sell<A, B>(
@@ -75,6 +75,8 @@ module dexcelerate::slot_swap {
 		ctx: &mut TxContext
 	) {
 		assert!(to_bytes(&type_name::get<SUI>()) == b"0x2::sui::SUI", EWrongSwapType);
+
+		let mut coin_in = slot.take_from_balance<B>(amount_in, true, ctx);
 	}
 
 	fun calc_and_transfer_fees(

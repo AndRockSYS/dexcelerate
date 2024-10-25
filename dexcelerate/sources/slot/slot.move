@@ -92,17 +92,17 @@ module dexcelerate::slot {
 		dex_info: &mut Dex_Info,
 		ctx: &mut TxContext
 	) {
-		let balance_in = take_from_balance<T>(slot, amount, true, ctx);
-		let amount = balance_in.value();
+		let coin_in = take_from_balance<T>(slot, amount, true, ctx);
+		let amount = coin_in.value();
 
 		let token_type = type_name::get<T>().into_string();
 
 		if(token_type == type_name::get<SUI>().into_string()) {
-			transfer::public_transfer(coin::from_balance<T>(balance_in, ctx), ctx.sender());
+			transfer::public_transfer(coin_in, ctx.sender());
 		} else {
 			let coin_out: Coin<SUI> = router::swap_exact_input_<T, SUI>(
-				balance_in.value(), 
-				coin::from_balance<T>(balance_in, ctx), 
+				coin_in.value(), 
+				coin_in, 
 				0, // ! amount out min 
 				dex_info, 
 				ctx
@@ -132,8 +132,8 @@ module dexcelerate::slot {
 		slot: &mut Slot, 
 		amount: u64, 
 		check_sender: bool,
-		ctx: &TxContext
-	): Balance<T> {
+		ctx: &mut TxContext
+	): Coin<T> {
 		if(check_sender) {
 			assert!(*&slot.owner == ctx.sender(), ENotASlotOwner);
 		};
@@ -141,10 +141,11 @@ module dexcelerate::slot {
 		let coin_type = type_name::get<T>().into_string();
 		assert!(bag::contains<String>(&slot.balances, coin_type), ESlotHasNoType);
 
-		let coin_balance = bag::borrow_mut<String, Balance<T>>(&mut slot.balances, coin_type);
-		assert!(balance::value<T>(coin_balance) >= amount, EBalanceIsLow);
+		let token_balance = bag::borrow_mut<String, Balance<T>>(&mut slot.balances, coin_type);
+		assert!(token_balance.value() >= amount, EBalanceIsLow);
 
-		balance::withdraw_all<T>(coin_balance)
+		let taken = token_balance.split(amount);
+		coin::from_balance<T>(taken, ctx)
 	}
 
 	public fun get_owner(slot: &Slot): address {

@@ -18,10 +18,10 @@ module dexcelerate::move_pump_protocol {
 		clock: &Clock, 
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot::take_from_balance<SUI>(slot, amount_in, true, ctx);
+		let coin_in = slot::take_from_balance<SUI>(slot, amount_in, true, ctx);
 		let (coin_in_left, coin_out) = move_pump::buy_returns<T>(
 			config, 
-			coin::from_balance<SUI>(balance_in, ctx), 
+			coin_in, 
 			dex_info, 
 			amount_min_out, 
 			clock, 
@@ -40,10 +40,10 @@ module dexcelerate::move_pump_protocol {
 		clock: &Clock, 
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot::take_from_balance<T>(slot, amount_in, true, ctx);
+		let coin_in = slot::take_from_balance<T>(slot, amount_in, true, ctx);
 		let (coin_out, coin_in_left) = move_pump::sell_returns<T>(
 			config, 
-			coin::from_balance<T>(balance_in, ctx), 
+			coin_in, 
 			amount_min_out, 
 			clock, 
 			ctx

@@ -13,9 +13,9 @@ module dexcelerate::blue_move_protocol {
 		dex_info: &mut Dex_Info,
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
+		let coin_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
 		let swapped = swap_exact_input_coin<A, B>(
-			coin::from_balance<A>(balance_in, ctx), 
+			coin_in, 
 			amount_out_min,
 			dex_info, 
 			ctx

@@ -17,11 +17,11 @@ module dexcelerate::cetus_clmm_protocol {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
+		let coin_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
 		let (coin_a_out, coin_b_out) = router::swap<A, B>(
 			config, 
 			pool,
-			coin::from_balance<A>(balance_in, ctx),
+			coin_in,
 			coin::zero<B>(ctx),  
 			true,
         	true,
@@ -45,12 +45,12 @@ module dexcelerate::cetus_clmm_protocol {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot::take_from_balance<B>(slot, amount_in, true, ctx);
+		let coin_in = slot::take_from_balance<B>(slot, amount_in, true, ctx);
 		let (coin_a_out, coin_b_out) = router::swap<A, B>(
 			config, 
 			pool, 
 			coin::zero<A>(ctx),
-			coin::from_balance<B>(balance_in, ctx),
+			coin_in,
 			false,
         	true,
         	amount_in,

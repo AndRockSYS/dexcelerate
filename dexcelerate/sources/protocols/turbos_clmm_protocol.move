@@ -19,10 +19,10 @@ module dexcelerate::turbos_clmm_protocol {
 		versioned: &Versioned,
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
+		let coin_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
 
 		let mut coins_a = vector::empty<Coin<A>>();
-		coins_a.push_back(coin::from_balance<A>(balance_in, ctx));
+		coins_a.push_back(coin_in);
 
 		let (coin_out, coin_in_left) = swap_router::swap_a_b_with_return_<A, B, FeeType>(
 			pool,
@@ -54,10 +54,10 @@ module dexcelerate::turbos_clmm_protocol {
 		versioned: &Versioned,
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot::take_from_balance<B>(slot, amount_in, true, ctx);
+		let coin_in = slot::take_from_balance<B>(slot, amount_in, true, ctx);
 
 		let mut coins_a = vector::empty<Coin<B>>();
-		coins_a.push_back(coin::from_balance<B>(balance_in, ctx));
+		coins_a.push_back(coin_in);
 
 		let (coin_out, coin_in_left) = swap_router::swap_b_a_with_return_<A, B, FeeType>(
 			pool,

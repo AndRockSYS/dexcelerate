@@ -12,10 +12,10 @@ module dexcelerate::flow_x_protocol {
 		amount_in: u64,
 		ctx: &mut TxContext
 	) {
-		let balance_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
+		let coin_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
 		let coin_out = router::swap_exact_input_direct<A, B>(
 			container,
-			coin::from_balance<A>(balance_in, ctx),
+			coin_in,
 			ctx
 		);
 
