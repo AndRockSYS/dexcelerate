@@ -2,14 +2,42 @@
 
 [move]
 version = 2
-manifest_digest = "6F2FCDCF5CFA2F4BA6AD3269BA96A46C3D05B7652E19D306B40D155C60E0AC68"
-deps_digest = "397E6A9F7A624706DBDFEE056CE88391A15876868FD18A88504DA74EB458D697"
+manifest_digest = "16FE9F27576D5DD3786857228B913184F39B9D168881438FDF063D256AC809A3"
+deps_digest = "CAFAD8A7CF51067FB4358215BECB86BD100DD64E57C2AC8A7AE7D74B688F5965"
 dependencies = [
+  { name = "CetusClmm" },
   { name = "Sui" },
   { name = "TurbosCLMM" },
   { name = "blue_move" },
+  { name = "cetus" },
   { name = "flow_x" },
   { name = "move_pump" },
+]
+
+[[move.package]]
+name = "CetusClmm"
+source = { local = "../lib/cetus_clmm" }
+
+dependencies = [
+  { name = "IntegerMate" },
+  { name = "MoveSTL" },
+  { name = "Sui" },
+]
+
+[[move.package]]
+name = "IntegerMate"
+source = { git = "https://github.com/CetusProtocol/integer-mate.git", rev = "mainnet-v1.23.1", subdir = "sui" }
+
+dependencies = [
+  { name = "Sui" },
+]
+
+[[move.package]]
+name = "MoveSTL"
+source = { git = "https://github.com/CetusProtocol/move-stl.git", rev = "mainnet-v1.23.1", subdir = "sui" }
+
+dependencies = [
+  { name = "Sui" },
 ]
 
 [[move.package]]
@@ -37,6 +65,15 @@ name = "blue_move"
 source = { local = "../lib/blue_move" }
 
 dependencies = [
+  { name = "Sui" },
+]
+
+[[move.package]]
+name = "cetus"
+source = { local = "../lib/cetus" }
+
+dependencies = [
+  { name = "CetusClmm" },
   { name = "Sui" },
 ]
 
