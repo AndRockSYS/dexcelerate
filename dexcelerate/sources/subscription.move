@@ -37,14 +37,6 @@ module dexcelerate::subscription {
 		new_collector: address
 	}
 
-	public struct UserFeePayed has copy, drop, store {
-		amount: u64
-	}
-
-	public struct BankFeePayed has copy, drop, store {
-		amount: u64
-	}
-
 	public struct Payment has copy, drop, store {
 		payment_info: String,
 		amount: u64
@@ -214,8 +206,6 @@ module dexcelerate::subscription {
 		bank::add_to_bank(bank, payment.split(user_fee, ctx), ctx);
 		fee::add_fee(fee_manager, payment);
 
-		event::emit(UserFeePayed {amount: user_fee});
-		event::emit(BankFeePayed {amount: dex_fee});
 		event::emit(Payment {
 			payment_info: item_info,
 			amount: dex_fee + user_fee

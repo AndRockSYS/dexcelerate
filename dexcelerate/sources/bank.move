@@ -41,6 +41,10 @@ module dexcelerate::bank {
 		new_signer: address
 	}
 
+	public struct UserFeePayed has copy, drop, store {
+		amount: u64
+	}
+
 	public struct Cancelled has copy, drop, store {
 		coupon_hash: vector<u8>
 	}
@@ -84,6 +88,9 @@ module dexcelerate::bank {
 		event::emit(Received {
 			sender: ctx.sender(),
 			value: coin.value()
+		});
+		event::emit(UserFeePayed {
+			amount: coin.value()
 		});
 		balance::join<SUI>(&mut bank.balance, coin.into_balance());
 	}

@@ -36,6 +36,10 @@ module dexcelerate::fee {
 		manager_address: address
 	}
 
+	public struct Fee has copy, drop, store {
+		amount: u64
+	}
+
 	public struct FeeAddressReset has copy, drop, store {
 		old_wallet: address,
 		new_wallet: address
@@ -96,6 +100,9 @@ module dexcelerate::fee {
 		fee_manager: &mut FeeManager,
 		coin: Coin<SUI>
 	) {
+		event::emit(Fee {
+			amount: coin.value()
+		});
 		balance::join<SUI>(&mut fee_manager.balance, coin.into_balance());
 	}
 
