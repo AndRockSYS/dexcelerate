@@ -54,8 +54,7 @@ module dexcelerate::turbos_clmm_protocol {
 		versioned: &Versioned,
 		ctx: &mut TxContext
 	) {
-		assert!(slot::get_owner(slot) == ctx.sender(), ENotASlotOwner);
-		let balance_in = slot::take_from_balance<B>(slot, amount_in);
+		let balance_in = slot::take_from_balance<B>(slot, amount_in, true, ctx);
 
 		let mut coins_a = vector::empty<Coin<B>>();
 		coins_a.push_back(coin::from_balance<B>(balance_in, ctx));

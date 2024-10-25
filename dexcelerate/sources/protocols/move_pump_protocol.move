@@ -40,9 +40,7 @@ module dexcelerate::move_pump_protocol {
 		clock: &Clock, 
 		ctx: &mut TxContext
 	) {
-		assert!(slot::get_owner(slot) == ctx.sender(), ENotASlotOwner);
-
-		let balance_in = slot::take_from_balance<T>(slot, amount_in);
+		let balance_in = slot::take_from_balance<T>(slot, amount_in, true, ctx);
 		let (coin_out, coin_in_left) = move_pump::sell_returns<T>(
 			config, 
 			coin::from_balance<T>(balance_in, ctx), 

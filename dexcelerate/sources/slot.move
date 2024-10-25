@@ -132,7 +132,7 @@ module dexcelerate::slot {
 		slot: &mut Slot, 
 		amount: u64, 
 		check_sender: bool,
-		ctx: &mut TxContext
+		ctx: &TxContext
 	): Balance<T> {
 		if(check_sender) {
 			assert!(*&slot.owner == ctx.sender(), ENotASlotOwner);
