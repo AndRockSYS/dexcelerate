@@ -7,7 +7,7 @@ module dexcelerate::turbos_clmm_protocol {
 	use turbos_clmm::pool::{Pool, Versioned};
 	use turbos_clmm::swap_router;
 
-	public entry fun swap_a_to_b<A, B, FeeType>(
+	public fun swap_a_to_b<A, B, FeeType>(
 		slot: &mut Slot,
 		pool: &mut Pool<A, B, FeeType>,
 		amount_in: u64,

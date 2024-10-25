@@ -20,7 +20,7 @@ module dexcelerate::cetus_clmm_protocol {
 		let balance_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
 		let (coin_a_out, coin_b_out) = router::swap<A, B>(
 			config, 
-			pool, 
+			pool,
 			coin::from_balance<A>(balance_in, ctx),
 			coin::zero<B>(ctx),  
 			true,

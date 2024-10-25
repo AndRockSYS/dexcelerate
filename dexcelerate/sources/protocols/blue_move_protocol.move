@@ -23,7 +23,7 @@ module dexcelerate::blue_move_protocol {
 		slot::add_to_balance<B>(slot, coin::into_balance<B>(swapped));
 	}
 
-	public fun swap_exact_input_coin<A, B>(
+	public(package) fun swap_exact_input_coin<A, B>(
 		coin_in: Coin<A>,
 		amount_out_min: u64,
 		dex_info: &mut Dex_Info,
