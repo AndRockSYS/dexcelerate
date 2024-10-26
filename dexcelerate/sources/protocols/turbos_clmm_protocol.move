@@ -11,28 +11,25 @@ module dexcelerate::turbos_clmm_protocol {
 		slot: &mut Slot,
 		pool: &mut Pool<A, B, FeeType>,
 		amount_in: u64,
-		amount_threshold: u64,
-		sqrt_price_limit: u128,
-		is_exact_in: bool,
-		deadline: u64,
+		amount_out_min: u64,
 		clock: &Clock,
 		versioned: &Versioned,
 		ctx: &mut TxContext
 	) {
 		let coin_in = slot::take_from_balance<A>(slot, amount_in, true, ctx);
-
 		let mut coins_a = vector::empty<Coin<A>>();
 		coins_a.push_back(coin_in);
 
+		let sqrt_price_limit = if(amount_in < amount_out_min) {79226673515401279992447579055} else {4295048016};
 		let (coin_out, coin_in_left) = swap_router::swap_a_b_with_return_<A, B, FeeType>(
 			pool,
 			coins_a, 
 			amount_in,
-			amount_threshold,
+			500_000_000, // amount_threshold
 			sqrt_price_limit,
-			is_exact_in,
+			true,
 			ctx.sender(),
-			deadline,
+			999_999_999_999, // deadline
 			clock,
 			versioned,
 			ctx
@@ -47,27 +44,25 @@ module dexcelerate::turbos_clmm_protocol {
 		pool: &mut Pool<A, B, FeeType>,
 		amount_in: u64,
 		amount_threshold: u64,
-		sqrt_price_limit: u128,
-		is_exact_in: bool,
-		deadline: u64,
+		amount_out_min: u64,
 		clock: &Clock,
 		versioned: &Versioned,
 		ctx: &mut TxContext
 	) {
 		let coin_in = slot::take_from_balance<B>(slot, amount_in, true, ctx);
-
 		let mut coins_a = vector::empty<Coin<B>>();
 		coins_a.push_back(coin_in);
 
+		let sqrt_price_limit = if(amount_in < amount_out_min) {79226673515401279992447579055} else {4295048016};
 		let (coin_out, coin_in_left) = swap_router::swap_b_a_with_return_<A, B, FeeType>(
 			pool,
 			coins_a, 
 			amount_in,
 			amount_threshold,
 			sqrt_price_limit,
-			is_exact_in,
+			true,
 			ctx.sender(),
-			deadline,
+			999_999_999_999,
 			clock,
 			versioned,
 			ctx

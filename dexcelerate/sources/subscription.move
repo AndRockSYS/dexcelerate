@@ -11,7 +11,7 @@ module dexcelerate::subscription {
 	use sui::bag::{Self, Bag};
 
 	use sui::sui::{SUI};
-	use sui::coin::{Self, Coin};
+	use sui::coin::{Coin};
 
 	use dexcelerate::slot::{Self, Slot};
 	use dexcelerate::bank::{Self, Bank};
