@@ -96,7 +96,7 @@ module dexcelerate::subscription {
 		amount_out_min: u64,
 		ctx: &mut TxContext
 	) {
-		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input_coin(
+		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input(
 			payment,
 			amount_out_min,
 			dex_info,
@@ -175,7 +175,7 @@ module dexcelerate::subscription {
 		};
 
 		let sui_coin = slot::take_from_balance<T>(user_slot, amount, false, ctx);
-		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input_coin(
+		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input(
 			sui_coin,
 			amount_out_min,
 			dex_info,
