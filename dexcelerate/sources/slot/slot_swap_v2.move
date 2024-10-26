@@ -1,4 +1,4 @@
-module dexcelerate::slot_swap {
+module dexcelerate::slot_swap_v2 {
 	use std::bcs::to_bytes;
 	use std::type_name;
 
