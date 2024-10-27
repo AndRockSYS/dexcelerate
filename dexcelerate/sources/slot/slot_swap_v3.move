@@ -2,6 +2,7 @@ module dexcelerate::slot_swap_v3 {
 	use sui::clock::{Clock};
 
 	use sui::sui::{SUI};
+	use sui::coin;
 
 	use dexcelerate::utils;
 	use dexcelerate::slot::{Slot};
@@ -9,8 +10,12 @@ module dexcelerate::slot_swap_v3 {
 	use dexcelerate::fee::{FeeManager};
 	use dexcelerate::slot_swap_v2;
 
-	use turbos_clmm::pool::{Pool, Versioned};
+	use turbos_clmm::pool::{Pool as TPool, Versioned};
 	use dexcelerate::turbos_clmm_protocol;
+
+	use cetus_clmm::config::{GlobalConfig};
+	use cetus_clmm::pool::{Pool as CPool};
+	use dexcelerate::cetus_clmm_protocol;
 
 	const EWrongSwapType: u64 = 0;
 
@@ -24,7 +29,7 @@ module dexcelerate::slot_swap_v3 {
 		slot: &mut Slot,
 		amount_in: u64,
 		amount_out_min: u64,
-		pool: &mut Pool<A, SUI, FeeType>,
+		pool: &mut TPool<A, SUI, FeeType>,
 		versioned: &Versioned,
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -51,7 +56,7 @@ module dexcelerate::slot_swap_v3 {
 		slot: &mut Slot,
 		amount_in: u64,
 		amount_out_min: u64,
-		pool: &mut Pool<A, SUI, FeeType>,
+		pool: &mut TPool<A, SUI, FeeType>,
 		versioned: &Versioned,
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -75,7 +80,7 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		amount_out_min: u64,
 		a_to_b: bool,
-		pool: &mut Pool<A, B, FeeType>,
+		pool: &mut TPool<A, B, FeeType>,
 		versioned: &Versioned,
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -103,4 +108,93 @@ module dexcelerate::slot_swap_v3 {
 	}
 
 	// Cetus CLMM
+
+	public entry fun buy_with_base_cetus<A>(
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		users_fee_percent: u64,
+		total_fee_percent: u64,
+		slot: &mut Slot,
+		amount_in: u64,
+		amount_out_min: u64,
+		config: &GlobalConfig,
+		pool: &mut CPool<A, SUI>,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let mut coin_in = slot.take_from_balance<SUI>(amount_in, true, ctx);
+
+		coin_in = slot_swap_v2::calc_and_transfer_fees(
+			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
+		);
+
+		let (coin_out, coin_in_left) = cetus_clmm_protocol::swap_b_to_a<A, SUI>(
+			config, pool, coin_in, amount_out_min, clock, ctx
+		);
+
+		slot.add_to_balance<SUI>(coin_in_left.into_balance<SUI>());
+		slot.add_to_balance<A>(coin_out.into_balance<A>());
+	}
+
+	public entry fun sell_with_base_cetus<A>(
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		users_fee_percent: u64,
+		total_fee_percent: u64,
+		slot: &mut Slot,
+		amount_in: u64,
+		amount_out_min: u64,
+		config: &GlobalConfig,
+		pool: &mut CPool<A, SUI>,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
+
+		let (coin_in_left, mut coin_out) = cetus_clmm_protocol::swap_a_to_b<A, SUI>(
+			config, pool, coin_in, amount_out_min, clock, ctx
+		);
+
+		coin_out = slot_swap_v2::calc_and_transfer_fees(
+			bank, fee_manager, coin_out, users_fee_percent, total_fee_percent, ctx
+		);
+
+		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
+		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
+	}
+
+	public entry fun swap_cetus<A, B> (
+		slot: &mut Slot,
+		amount_in: u64,
+		amount_out_min: u64,
+		a_to_b: bool,
+		config: &GlobalConfig,
+		pool: &mut CPool<A, B>,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let mut coin_a = coin::zero<A>(ctx);
+		let mut coin_b = coin::zero<B>(ctx);
+
+		if(a_to_b) {
+			let (coin_a_out, coin_b_out) = cetus_clmm_protocol::swap_a_to_b<A, B>(
+				config, pool, 
+				slot.take_from_balance<A>(amount_in, true, ctx), 
+				amount_out_min, clock, ctx
+			);
+			coin_a.join(coin_a_out);
+			coin_b.join(coin_b_out);
+		} else {
+			let (coin_a_out, coin_b_out) = cetus_clmm_protocol::swap_b_to_a<A, B>(
+				config, pool, 
+				slot.take_from_balance<B>(amount_in, true, ctx), 
+				amount_out_min, clock, ctx
+			);
+			coin_a.join(coin_a_out);
+			coin_b.join(coin_b_out);
+		};	
+
+		slot.add_to_balance<A>(coin_a.into_balance<A>());
+		slot.add_to_balance<B>(coin_b.into_balance<B>());
+	}
 }
