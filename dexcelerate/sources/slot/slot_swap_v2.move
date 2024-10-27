@@ -1,7 +1,4 @@
 module dexcelerate::slot_swap_v2 {
-	use std::bcs::to_bytes;
-	use std::type_name;
-
 	use sui::clock::{Clock};
 
 	use sui::sui::{SUI};
@@ -118,8 +115,8 @@ module dexcelerate::slot_swap_v2 {
 		protocol_id: u8, // 0 or 1
 		ctx: &mut TxContext
 	) {
-		assert!(!utils::is_sui<A>(), EWrongSwapType);
-		assert!(!utils::is_sui<B>(), EWrongSwapType);
+		assert!(!utils::is_base<A>(), EWrongSwapType);
+		assert!(!utils::is_base<B>(), EWrongSwapType);
 
 		let coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
 
@@ -134,7 +131,7 @@ module dexcelerate::slot_swap_v2 {
 		slot.add_to_balance<B>(coin_out.into_balance<B>());
 	}
 
-	fun calc_and_transfer_fees(
+	public(package) fun calc_and_transfer_fees(
 		bank: &mut Bank,
 		fee_manager: &mut FeeManager,
 		mut payment: Coin<SUI>,
