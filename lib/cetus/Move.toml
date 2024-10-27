@@ -1,6 +1,7 @@
 [package]
 name = "cetus"
 edition = "2024.beta" 
+version = "1.0.0"
 published-at = "0x8faab90228e4c4df91c41626bbaefa19fc25c514405ac64de54578dec9e6f5ee"
 # edition = "legacy" to use legacy (pre-2024) Move
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"

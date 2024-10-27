@@ -1,6 +1,7 @@
 [package]
 name = "flow_x"
 edition = "2024.beta" 
+version = "1.0.0"
 published-at = "0xba153169476e8c3114962261d1edc70de5ad9781b83cc617ecc8c1923191cae0"
 # edition = "legacy" to use legacy (pre-2024) Move
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"

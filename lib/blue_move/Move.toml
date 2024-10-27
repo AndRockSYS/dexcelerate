@@ -1,6 +1,7 @@
 [package]
 name = "blue_move"
 edition = "2024.beta"
+version = "1.0.0"
 published-at = "0xb24b6789e088b876afabca733bed2299fbc9e2d6369be4d1acfa17d8145454d9"
 # edition = "legacy" to use legacy (pre-2024) Move
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"
