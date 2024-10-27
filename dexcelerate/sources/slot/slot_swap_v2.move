@@ -7,6 +7,7 @@ module dexcelerate::slot_swap_v2 {
 	use sui::sui::{SUI};
 	use sui::coin::{Self, Coin};
 
+	use dexcelerate::utils;
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
@@ -117,8 +118,8 @@ module dexcelerate::slot_swap_v2 {
 		protocol_id: u8, // 0 or 1
 		ctx: &mut TxContext
 	) {
-		assert!(to_bytes(&type_name::get<A>()) == b"0x2::sui::SUI", EWrongSwapType);
-		assert!(to_bytes(&type_name::get<B>()) == b"0x2::sui::SUI", EWrongSwapType);
+		assert!(!utils::is_sui<A>(), EWrongSwapType);
+		assert!(!utils::is_sui<B>(), EWrongSwapType);
 
 		let coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
 
