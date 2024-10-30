@@ -1,6 +1,6 @@
 module move_pump::move_pump {
     public struct Configuration has store, key {
-        id: UID,
+        id: 0x2::object::UID,
         version: u64,
         admin: address,
         platform_fee: u64,
@@ -12,7 +12,7 @@ module move_pump::move_pump {
     }
     
     public struct Pool<phantom T0> has store, key {
-        id: UID,
+        id: 0x2::object::UID,
         real_sui_reserves: 0x2::coin::Coin<0x2::sui::SUI>,
         real_token_reserves: 0x2::coin::Coin<T0>,
         virtual_token_reserves: u64,
@@ -78,74 +78,63 @@ module move_pump::move_pump {
         ts: u64,
     }
     
-    fun swap<T0>(arg0: &mut Pool<T0>, arg1: 0x2::coin::Coin<T0>, arg2: 0x2::coin::Coin<0x2::sui::SUI>, arg3: u64, arg4: u64, arg5: &mut TxContext) : (0x2::coin::Coin<T0>, 0x2::coin::Coin<0x2::sui::SUI>) {
+    fun swap<T0>(arg0: &mut Pool<T0>, arg1: 0x2::coin::Coin<T0>, arg2: 0x2::coin::Coin<0x2::sui::SUI>, arg3: u64, arg4: u64, arg5: &mut 0x2::tx_context::TxContext) : (0x2::coin::Coin<T0>, 0x2::coin::Coin<0x2::sui::SUI>) {
 		abort 0
     }
     
-    public fun asert_pool_not_completed<T0>(arg0: &Configuration, arg1: &mut TxContext) {
+    public fun asert_pool_not_completed<T0>(arg0: &Configuration, arg1: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
     fun assert_lp_value_is_increased_or_not_changed(arg0: u64, arg1: u64, arg2: u64, arg3: u64) {
-        assert!((arg0 as u128) * (arg1 as u128) <= (arg2 as u128) * (arg3 as u128), 2);
+		abort 0
     }
     
     fun assert_version(arg0: u64) {
-        assert!(arg0 == 5, 4);
-    }
-    
-    public entry fun buy<T0>(arg0: &mut Configuration, arg1: 0x2::coin::Coin<0x2::sui::SUI>, arg2: &mut blue_move::swap::Dex_Info, arg3: u64, arg4: &0x2::clock::Clock, arg5: &mut TxContext) {
 		abort 0
     }
     
-    fun buy_direct<T0>(arg0: &mut blue_move::swap::Dex_Info, arg1: 0x2::coin::Coin<0x2::sui::SUI>, arg2: &mut Pool<T0>, arg3: u64, arg4: u64, arg5: address, arg6: u64, arg7: &0x2::clock::Clock, arg8: &mut TxContext) {
+    public entry fun buy<T0>(arg0: &mut Configuration, arg1: 0x2::coin::Coin<0x2::sui::SUI>, arg2: &mut blue_move::swap::Dex_Info, arg3: u64, arg4: &0x2::clock::Clock, arg5: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
-    public fun buy_returns<T0>(arg0: &mut Configuration, arg1: 0x2::coin::Coin<0x2::sui::SUI>, arg2: &mut blue_move::swap::Dex_Info, arg3: u64, arg4: &0x2::clock::Clock, arg5: &mut TxContext) : (0x2::coin::Coin<0x2::sui::SUI>, 0x2::coin::Coin<T0>) {
+    public fun buy_returns<T0>(arg0: &mut Configuration, arg1: 0x2::coin::Coin<0x2::sui::SUI>, arg2: &mut blue_move::swap::Dex_Info, arg3: u64, arg4: &0x2::clock::Clock, arg5: &mut 0x2::tx_context::TxContext) : (0x2::coin::Coin<0x2::sui::SUI>, 0x2::coin::Coin<T0>) {
 		abort 0
     }
     
-    public entry fun create<T0>(arg0: &mut Configuration, arg1: 0x2::coin::TreasuryCap<T0>, arg2: &0x2::clock::Clock, arg3: 0x1::ascii::String, arg4: 0x1::ascii::String, arg5: 0x1::ascii::String, arg6: 0x1::ascii::String, arg7: 0x1::ascii::String, arg8: 0x1::ascii::String, arg9: 0x1::ascii::String, arg10: &mut TxContext) {
+    public entry fun create<T0>(arg0: &mut Configuration, arg1: 0x2::coin::TreasuryCap<T0>, arg2: &0x2::clock::Clock, arg3: 0x1::ascii::String, arg4: 0x1::ascii::String, arg5: 0x1::ascii::String, arg6: 0x1::ascii::String, arg7: 0x1::ascii::String, arg8: 0x1::ascii::String, arg9: 0x1::ascii::String, arg10: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
-    public entry fun create_and_first_buy<T0>(arg0: &mut Configuration, arg1: 0x2::coin::TreasuryCap<T0>, arg2: &mut blue_move::swap::Dex_Info, arg3: 0x2::coin::Coin<0x2::sui::SUI>, arg4: u64, arg5: &0x2::clock::Clock, arg6: 0x1::ascii::String, arg7: 0x1::ascii::String, arg8: 0x1::ascii::String, arg9: 0x1::ascii::String, arg10: 0x1::ascii::String, arg11: 0x1::ascii::String, arg12: 0x1::ascii::String, arg13: &mut TxContext) {
+    fun init(arg0: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
-    fun init(arg0: &mut TxContext) {
+    public entry fun migrate_version(arg0: &mut Configuration, arg1: u64, arg2: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
-    public entry fun migrate_version(arg0: &mut Configuration, arg1: u64, arg2: &mut TxContext) {
+    public entry fun sell<T0>(arg0: &mut Configuration, arg1: 0x2::coin::Coin<T0>, arg2: u64, arg3: &0x2::clock::Clock, arg4: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
-    public entry fun sell<T0>(arg0: &mut Configuration, arg1: 0x2::coin::Coin<T0>, arg2: u64, arg3: &0x2::clock::Clock, arg4: &mut TxContext) {
+    public fun sell_returns<T0>(arg0: &mut Configuration, arg1: 0x2::coin::Coin<T0>, arg2: u64, arg3: &0x2::clock::Clock, arg4: &mut 0x2::tx_context::TxContext) : (0x2::coin::Coin<0x2::sui::SUI>, 0x2::coin::Coin<T0>) {
 		abort 0
     }
     
-    public fun sell_returns<T0>(arg0: &mut Configuration, arg1: 0x2::coin::Coin<T0>, arg2: u64, arg3: &0x2::clock::Clock, arg4: &mut TxContext) : (0x2::coin::Coin<0x2::sui::SUI>, 0x2::coin::Coin<T0>) {
+    public fun skim<T0>(arg0: &mut Configuration, arg1: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
-    public fun skim<T0>(arg0: &mut Configuration, arg1: &mut TxContext) {
+    public entry fun transfer_admin(arg0: &mut Configuration, arg1: address, arg2: &0x2::clock::Clock, arg3: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
-    public entry fun transfer_admin(arg0: &mut Configuration, arg1: address, arg2: &0x2::clock::Clock, arg3: &mut TxContext) {
+    fun transfer_pool<T0>(arg0: &mut Pool<T0>, arg1: &mut blue_move::swap::Dex_Info, arg2: address, arg3: u64, arg4: &0x2::clock::Clock, arg5: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
     
-    fun transfer_pool<T0>(arg0: &mut Pool<T0>, arg1: &mut blue_move::swap::Dex_Info, arg2: address, arg3: u64, arg4: &0x2::clock::Clock, arg5: &mut TxContext) {
+    public entry fun update_config(arg0: &mut Configuration, arg1: u64, arg2: u64, arg3: u64, arg4: u64, arg5: u64, arg6: u8, arg7: &0x2::clock::Clock, arg8: &mut 0x2::tx_context::TxContext) {
 		abort 0
     }
-    
-    public entry fun update_config(arg0: &mut Configuration, arg1: u64, arg2: u64, arg3: u64, arg4: u64, arg5: u64, arg6: u8, arg7: &0x2::clock::Clock, arg8: &mut TxContext) {
-		abort 0
-    }
-    
-    // decompiled from Move bytecode v6
 }
-
