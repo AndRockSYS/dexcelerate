@@ -112,9 +112,9 @@ module dexcelerate::bank {
 		bag::add<vector<u8>, bool>(&mut bank.coupons, coupon_hash, true);
 
 		let mut message = coupon_hash;
-		message.append(to_bytes<address>(&receiver));
-		message.append(to_bytes<u64>(&amount));
-		message.append(to_bytes<u64>(&expiry));
+		vector::append<u8>(&mut message, to_bytes<address>(&receiver));
+		vector::append<u8>(&mut message, to_bytes<u64>(&amount));
+		vector::append<u8>(&mut message, to_bytes<u64>(&expiry));
 		let hashed_message = keccak256(&message);
 
 		assert!(ed25519_verify(&signed_coupon, &signer_public_key, &hashed_message), EInvalidSignature);

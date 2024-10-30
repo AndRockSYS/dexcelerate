@@ -7,12 +7,12 @@ version = "1.0.0"
 # authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
 
 [dependencies]
-Sui = { override = true, git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet"}
+Sui = { override = true, git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet"}
 blue_move = { local = "../lib/blue_move" }
 move_pump = { local = "../lib/move_pump" }
 flow_x = { local = "../lib/flow_x" }
 cetus = { local = "../lib/cetus" }
-CetusClmm = { local = "../lib/cetus_clmm" }
+CetusClmm = { git = "https://github.com/CetusProtocol/cetus-clmm-interface.git", subdir = "sui/clmmpool", rev = "mainnet-v1.23.1" }
 TurbosCLMM = { git = "https://github.com/turbos-finance/turbos-sui-move-interface.git", subdir = "clmm", rev = "framework/mainnet" }
 
 # deepbook = { git = "https://github.com/MystenLabs/deepbookv3", subdir = "packages/deepbook", rev = "framework/testnet" }
