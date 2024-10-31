@@ -2,13 +2,11 @@
 
 [move]
 version = 3
-manifest_digest = "869B15C03EF73309A53D72EE35B39A94E2310569E9B76690E1AB385DC1308BA0"
-deps_digest = "CAFAD8A7CF51067FB4358215BECB86BD100DD64E57C2AC8A7AE7D74B688F5965"
+manifest_digest = "14015472B23E8EE20AFAA16441EBC11C72918CEFD804B2FB7339269C209BA338"
+deps_digest = "397E6A9F7A624706DBDFEE056CE88391A15876868FD18A88504DA74EB458D697"
 dependencies = [
-  { id = "CetusClmm", name = "CetusClmm" },
   { id = "Sui", name = "Sui" },
   { id = "TurbosCLMM", name = "TurbosCLMM" },
-  { id = "blue_move", name = "blue_move" },
   { id = "cetus", name = "cetus" },
   { id = "flow_x", name = "flow_x" },
   { id = "move_pump", name = "move_pump" },
@@ -73,6 +71,15 @@ id = "cetus"
 source = { local = "../lib/cetus" }
 
 dependencies = [
+  { id = "Sui", name = "Sui" },
+  { id = "cetus_stable_farming", name = "cetus_stable_farming" },
+]
+
+[[move.package]]
+id = "cetus_stable_farming"
+source = { local = "../lib/cetus_stable_farming" }
+
+dependencies = [
   { id = "CetusClmm", name = "CetusClmm" },
   { id = "Sui", name = "Sui" },
 ]
@@ -98,3 +105,11 @@ dependencies = [
 compiler-version = "1.36.2"
 edition = "2024.beta"
 flavor = "sui"
+
+[env]
+
+[env.mainnet]
+chain-id = "35834a8a"
+original-published-id = "0x82c3d9a3b621de2890054ddb9c0b0d240583ce3cd8c8bed0f5529f15869f1d3a"
+latest-published-id = "0x82c3d9a3b621de2890054ddb9c0b0d240583ce3cd8c8bed0f5529f15869f1d3a"
+published-version = "1"
