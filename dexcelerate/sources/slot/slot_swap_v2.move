@@ -17,6 +17,7 @@ module dexcelerate::slot_swap_v2 {
 	use dexcelerate::move_pump_protocol;
 
 	const EWrongSwapType: u64 = 0;
+	const ENotEnoughToCoverGas: u64 = 1;
 
 	public entry fun buy_with_base<B>(
 		bank: &mut Bank,
@@ -74,6 +75,8 @@ module dexcelerate::slot_swap_v2 {
 		dex_info: &mut Dex_Info, // blue_move
 		config: &mut Configuration, // move_pump
 		protocol_id: u8, // 0 or 1 or 2
+		gas_lended: u64,
+		gas_sponsor: Option<address>,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
@@ -101,6 +104,8 @@ module dexcelerate::slot_swap_v2 {
 			users_fee_percent, 
 			total_fee_percent, ctx
 		);
+
+		check_and_transfer_sponsor_gas(&mut coin_out, gas_lended, gas_sponsor, ctx);
 
 		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
 		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
@@ -146,5 +151,17 @@ module dexcelerate::slot_swap_v2 {
 		fee_manager.add_fee(payment.split(total_fee - user_fee, ctx));
 
 		payment
+	}
+
+	public(package) fun check_and_transfer_sponsor_gas(
+		coin: &mut Coin<SUI>,
+		gas_lended: u64,
+		gas_sponsor: Option<address>,
+		ctx: &mut TxContext
+	) {
+		if(gas_sponsor.is_some()) {
+			assert!(coin.value() >= gas_lended, ENotEnoughToCoverGas);
+			transfer::public_transfer(coin.split(gas_lended, ctx), gas_sponsor.destroy_some());
+		};
 	}
 }

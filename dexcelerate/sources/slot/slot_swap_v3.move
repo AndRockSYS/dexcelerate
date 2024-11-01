@@ -56,6 +56,8 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		pool: &mut TPool<A, SUI, FeeType>,
 		versioned: &Versioned,
+		gas_lended: u64,
+		gas_sponsor: Option<address>,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
@@ -68,6 +70,8 @@ module dexcelerate::slot_swap_v3 {
 		coin_out = slot_swap_v2::calc_and_transfer_fees(
 			bank, fee_manager, coin_out, users_fee_percent, total_fee_percent, ctx
 		);
+
+		slot_swap_v2::check_and_transfer_sponsor_gas(&mut coin_out, gas_lended, gas_sponsor, ctx);
 
 		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
 		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
@@ -141,6 +145,8 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, SUI>,
+		gas_lended: u64,
+		gas_sponsor: Option<address>,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
@@ -153,6 +159,8 @@ module dexcelerate::slot_swap_v3 {
 		coin_out = slot_swap_v2::calc_and_transfer_fees(
 			bank, fee_manager, coin_out, users_fee_percent, total_fee_percent, ctx
 		);
+
+		slot_swap_v2::check_and_transfer_sponsor_gas(&mut coin_out, gas_lended, gas_sponsor, ctx);
 
 		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
 		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
