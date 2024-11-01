@@ -21,33 +21,6 @@ module dexcelerate::slot_swap_v3 {
 
 	// Turbos CLMM
 
-	public entry fun sell_with_base_turbos<A, FeeType>(
-		bank: &mut Bank,
-		fee_manager: &mut FeeManager,
-		users_fee_percent: u64,
-		total_fee_percent: u64,
-		slot: &mut Slot,
-		amount_in: u64,
-		amount_out_min: u64,
-		pool: &mut TPool<A, SUI, FeeType>,
-		versioned: &Versioned,
-		clock: &Clock,
-		ctx: &mut TxContext
-	) {
-		let coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
-
-		let (mut coin_out, coin_in_left) = turbos_clmm_protocol::swap_a_to_b<A, SUI, FeeType>(
-			pool, coin_in, amount_out_min, clock, versioned, ctx
-		);
-
-		coin_out = slot_swap_v2::calc_and_transfer_fees(
-			bank, fee_manager, coin_out, users_fee_percent, total_fee_percent, ctx
-		);
-
-		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
-		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
-	}
-
 	public entry fun buy_with_base_turbos<A, FeeType>(
 		bank: &mut Bank,
 		fee_manager: &mut FeeManager,
@@ -55,7 +28,6 @@ module dexcelerate::slot_swap_v3 {
 		total_fee_percent: u64,
 		slot: &mut Slot,
 		amount_in: u64,
-		amount_out_min: u64,
 		pool: &mut TPool<A, SUI, FeeType>,
 		versioned: &Versioned,
 		clock: &Clock,
@@ -68,17 +40,42 @@ module dexcelerate::slot_swap_v3 {
 		);
 
 		let (coin_out, coin_in_left) = turbos_clmm_protocol::swap_b_to_a<A, SUI, FeeType>(
-			pool, coin_in, amount_out_min, clock, versioned, ctx
+			pool, coin_in, clock, versioned, ctx
 		);
 
 		slot.add_to_balance<SUI>(coin_in_left.into_balance<SUI>());
 		slot.add_to_balance<A>(coin_out.into_balance<A>());
 	}
 
+	public entry fun sell_with_base_turbos<A, FeeType>(
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		users_fee_percent: u64,
+		total_fee_percent: u64,
+		slot: &mut Slot,
+		amount_in: u64,
+		pool: &mut TPool<A, SUI, FeeType>,
+		versioned: &Versioned,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
+
+		let (mut coin_out, coin_in_left) = turbos_clmm_protocol::swap_a_to_b<A, SUI, FeeType>(
+			pool, coin_in, clock, versioned, ctx
+		);
+
+		coin_out = slot_swap_v2::calc_and_transfer_fees(
+			bank, fee_manager, coin_out, users_fee_percent, total_fee_percent, ctx
+		);
+
+		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
+		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
+	}
+
 	public entry fun swap_turbos<A, B, FeeType>(
 		slot: &mut Slot,
 		amount_in: u64,
-		amount_out_min: u64,
 		a_to_b: bool,
 		pool: &mut TPool<A, B, FeeType>,
 		versioned: &Versioned,
@@ -92,7 +89,7 @@ module dexcelerate::slot_swap_v3 {
 			let (coin_out, coin_in_left) = turbos_clmm_protocol::swap_a_to_b<A, B, FeeType>(
 				pool, 
 				slot.take_from_balance<A>(amount_in, true, ctx), 
-				amount_out_min, clock, versioned, ctx
+				clock, versioned, ctx
 			);
 			slot.add_to_balance<A>(coin_in_left.into_balance<A>());
 			slot.add_to_balance<B>(coin_out.into_balance<B>());
@@ -100,7 +97,7 @@ module dexcelerate::slot_swap_v3 {
 			let (coin_out, coin_in_left) = turbos_clmm_protocol::swap_b_to_a<A, B, FeeType>(
 				pool, 
 				slot.take_from_balance<B>(amount_in, true, ctx), 
-				amount_out_min, clock, versioned, ctx
+				clock, versioned, ctx
 			);
 			slot.add_to_balance<B>(coin_in_left.into_balance<B>());
 			slot.add_to_balance<A>(coin_out.into_balance<A>());
@@ -116,7 +113,6 @@ module dexcelerate::slot_swap_v3 {
 		total_fee_percent: u64,
 		slot: &mut Slot,
 		amount_in: u64,
-		amount_out_min: u64,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, SUI>,
 		clock: &Clock,
@@ -129,7 +125,7 @@ module dexcelerate::slot_swap_v3 {
 		);
 
 		let (coin_out, coin_in_left) = cetus_clmm_protocol::swap_b_to_a<A, SUI>(
-			config, pool, coin_in, amount_out_min, clock, ctx
+			config, pool, coin_in, clock, ctx
 		);
 
 		slot.add_to_balance<SUI>(coin_in_left.into_balance<SUI>());
@@ -143,7 +139,6 @@ module dexcelerate::slot_swap_v3 {
 		total_fee_percent: u64,
 		slot: &mut Slot,
 		amount_in: u64,
-		amount_out_min: u64,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, SUI>,
 		clock: &Clock,
@@ -152,7 +147,7 @@ module dexcelerate::slot_swap_v3 {
 		let coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
 
 		let (coin_in_left, mut coin_out) = cetus_clmm_protocol::swap_a_to_b<A, SUI>(
-			config, pool, coin_in, amount_out_min, clock, ctx
+			config, pool, coin_in, clock, ctx
 		);
 
 		coin_out = slot_swap_v2::calc_and_transfer_fees(
@@ -166,7 +161,6 @@ module dexcelerate::slot_swap_v3 {
 	public entry fun swap_cetus<A, B> (
 		slot: &mut Slot,
 		amount_in: u64,
-		amount_out_min: u64,
 		a_to_b: bool,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, B>,
@@ -180,7 +174,7 @@ module dexcelerate::slot_swap_v3 {
 			let (coin_a_out, coin_b_out) = cetus_clmm_protocol::swap_a_to_b<A, B>(
 				config, pool, 
 				slot.take_from_balance<A>(amount_in, true, ctx), 
-				amount_out_min, clock, ctx
+				clock, ctx
 			);
 			coin_a.join(coin_a_out);
 			coin_b.join(coin_b_out);
@@ -188,7 +182,7 @@ module dexcelerate::slot_swap_v3 {
 			let (coin_a_out, coin_b_out) = cetus_clmm_protocol::swap_b_to_a<A, B>(
 				config, pool, 
 				slot.take_from_balance<B>(amount_in, true, ctx), 
-				amount_out_min, clock, ctx
+				clock, ctx
 			);
 			coin_a.join(coin_a_out);
 			coin_b.join(coin_b_out);

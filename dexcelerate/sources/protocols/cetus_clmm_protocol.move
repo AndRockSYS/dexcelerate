@@ -10,12 +10,10 @@ module dexcelerate::cetus_clmm_protocol {
 		config: &GlobalConfig,
 		pool: &mut Pool<A, B>,
 		coin_in: Coin<A>,
-		amount_out_min: u64,
 		clock: &Clock,
 		ctx: &mut TxContext
 	): (Coin<A>, Coin<B>) {
 		let amount_in = coin_in.value();
-		let sqrt_price_limit = if(amount_in < amount_out_min) {79226673515401279992447579055} else {4295048016};
 		router::swap<A, B>(
 			config, 
 			pool,
@@ -24,7 +22,7 @@ module dexcelerate::cetus_clmm_protocol {
 			true,
         	true,
         	amount_in,
-        	sqrt_price_limit,
+        	4295048016,
 			false, 
 			clock, 
 			ctx
@@ -35,12 +33,10 @@ module dexcelerate::cetus_clmm_protocol {
 		config: &GlobalConfig,
 		pool: &mut Pool<A, B>,
 		coin_in: Coin<B>,
-		amount_out_min: u64,
 		clock: &Clock,
 		ctx: &mut TxContext
 	): (Coin<A>, Coin<B>) {
 		let amount_in = coin_in.value();
-		let sqrt_price_limit = if(amount_in < amount_out_min) {79226673515401279992447579055} else {4295048016};
 		router::swap<A, B>(
 			config, 
 			pool, 
@@ -49,7 +45,7 @@ module dexcelerate::cetus_clmm_protocol {
 			false,
         	true,
         	amount_in,
-        	sqrt_price_limit,
+        	79226673515401279992447579055,
 			false, 
 			clock, 
 			ctx
