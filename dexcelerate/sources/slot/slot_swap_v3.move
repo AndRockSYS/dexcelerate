@@ -8,7 +8,6 @@ module dexcelerate::slot_swap_v3 {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
-	use dexcelerate::slot_swap_v2;
 
 	use turbos_clmm::pool::{Pool as TPool, Versioned};
 	use dexcelerate::turbos_clmm_protocol;
@@ -16,6 +15,8 @@ module dexcelerate::slot_swap_v3 {
 	use cetus_clmm::config::{GlobalConfig};
 	use cetus_clmm::pool::{Pool as CPool};
 	use dexcelerate::cetus_clmm_protocol;
+
+	use dexcelerate::swap_router;
 
 	const EWrongSwapType: u64 = 0;
 
@@ -35,7 +36,7 @@ module dexcelerate::slot_swap_v3 {
 	) {
 		let mut coin_in = slot.take_from_balance<SUI>(amount_in, true, ctx);
 
-		coin_in = slot_swap_v2::calc_and_transfer_fees(
+		coin_in = swap_router::calc_and_transfer_fees(
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
 		);
 
@@ -67,11 +68,11 @@ module dexcelerate::slot_swap_v3 {
 			pool, coin_in, clock, versioned, ctx
 		);
 
-		coin_out = slot_swap_v2::calc_and_transfer_fees(
+		coin_out = swap_router::calc_and_transfer_fees(
 			bank, fee_manager, coin_out, users_fee_percent, total_fee_percent, ctx
 		);
 
-		slot_swap_v2::check_and_transfer_sponsor_gas(&mut coin_out, gas_lended, gas_sponsor, ctx);
+		swap_router::check_and_transfer_sponsor_gas(&mut coin_out, gas_lended, gas_sponsor, ctx);
 
 		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
 		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
@@ -124,7 +125,7 @@ module dexcelerate::slot_swap_v3 {
 	) {
 		let mut coin_in = slot.take_from_balance<SUI>(amount_in, true, ctx);
 
-		coin_in = slot_swap_v2::calc_and_transfer_fees(
+		coin_in = swap_router::calc_and_transfer_fees(
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
 		);
 
@@ -156,11 +157,11 @@ module dexcelerate::slot_swap_v3 {
 			config, pool, coin_in, clock, ctx
 		);
 
-		coin_out = slot_swap_v2::calc_and_transfer_fees(
+		coin_out = swap_router::calc_and_transfer_fees(
 			bank, fee_manager, coin_out, users_fee_percent, total_fee_percent, ctx
 		);
 
-		slot_swap_v2::check_and_transfer_sponsor_gas(&mut coin_out, gas_lended, gas_sponsor, ctx);
+		swap_router::check_and_transfer_sponsor_gas(&mut coin_out, gas_lended, gas_sponsor, ctx);
 
 		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
 		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
