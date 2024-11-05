@@ -26,7 +26,7 @@ module dexcelerate::swap_router {
 		protocol_id: u8, // 0 or 1
 		ctx: &mut TxContext
 	): Coin<B> {
-		let coin_out = coin::zero<B>(ctx);
+		let mut coin_out = coin::zero<B>(ctx);
 
 		if(protocol_id == 0) {
 			coin_out.join(flow_x_protocol::swap_exact_input<A, B>(
@@ -54,7 +54,7 @@ module dexcelerate::swap_router {
 	): (Coin<SUI>, Coin<T>) {
 		assert!(coin_in.value() > 0 || base_in.value() > 0, EZeroCoins);
 		if(coin_in.value() > 0 && base_in.value() > 0) {
-			abort(ETwoCoins);
+			abort(ETwoCoins)
 		};
 
 		if(coin_in.value() > 0) {
@@ -77,6 +77,8 @@ module dexcelerate::swap_router {
 				));
 			};
 
+			base_in.destroy_zero();
+
 			(base_out, coin_in_left)
 		} else {
 			// swapping SUI to T
@@ -97,6 +99,8 @@ module dexcelerate::swap_router {
 					ctx
 				));
 			};
+
+			coin_in.destroy_zero();
 
 			(base_in_left, coin_out)
 		}
