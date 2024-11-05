@@ -2,6 +2,7 @@ module dexcelerate::slot {
 	use std::ascii::{String};
 	use std::type_name;
 
+	use sui::clock::{Clock};
 	use sui::event;
 
 	use sui::balance::{Self, Balance};
@@ -10,8 +11,12 @@ module dexcelerate::slot {
 
 	use sui::bag::{Self, Bag};
 
-	use blue_move::router;
+	use flow_x::factory::{Container};
+	use dexcelerate::flow_x_protocol;
 	use blue_move::swap::{Dex_Info};
+	use dexcelerate::blue_move_protocol;
+	use move_pump::move_pump::{Configuration};
+	use dexcelerate::move_pump_protocol;
 
 	const ENotASlotOwner: u64 = 0;
 	const ESlotHasNoType: u64 = 1;
@@ -57,27 +62,41 @@ module dexcelerate::slot {
 		transfer::public_share_object(slot);
 	}
 
-	public entry fun deposit<T>(
+	public entry fun deposit_v2<T>(
 		slot: &mut Slot, 
 		coin_in: Coin<T>, 
-		dex_info: &mut Dex_Info, 
+		container: &mut Container, // flow_x
+		dex_info: &mut Dex_Info, // blue_move
+		config: &mut Configuration, // move_pump
+		protocol_id: u8, // 0 or 1 or 2
+		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		let amount = coin_in.value();
 		let token_type = type_name::get<T>().into_string();
 
+		let mut coin_out = coin::zero<SUI>(ctx);
+		let amount_min_out = 0;
+
 		if(token_type == type_name::get<SUI>().into_string()) {
 			add_to_balance<T>(slot, coin_in.into_balance<T>());
+		} else if (protocol_id == 0) {
+			coin_out.join(flow_x_protocol::swap_exact_input<T, SUI>(
+				container, coin_in, ctx
+			));
+		} else if (protocol_id == 1) {
+			coin_out.join(blue_move_protocol::swap_exact_input<T, SUI>(
+				coin_in, amount_min_out, dex_info, ctx
+			));
 		} else {
-			let coin_out: Coin<SUI> = router::swap_exact_input_<T, SUI>(
-				coin_in.value(), 
-				coin_in, 
-				0, // ! amount out min 
-				dex_info, 
-				ctx
+			let (out, left) = move_pump_protocol::sui_from_coin<T>(
+				config, coin_in, amount_min_out, clock, ctx
 			);
-			add_to_balance<SUI>(slot, coin_out.into_balance<SUI>());
+			transfer::public_transfer(left, ctx.sender());
+			coin_out.join(out);
 		};
+
+		add_to_balance<SUI>(slot, coin_out.into_balance<SUI>());
 	
 		event::emit(Deposit {		
 			slot: object::id_address(slot),
@@ -86,33 +105,46 @@ module dexcelerate::slot {
 		});
 	}
 
-	public entry fun withdraw<T>(
+	public entry fun withdraw_v2<T>(
 		slot: &mut Slot, 
 		amount: u64, 
-		dex_info: &mut Dex_Info,
+		container: &mut Container, // flow_x
+		dex_info: &mut Dex_Info, // blue_move
+		config: &mut Configuration, // move_pump
+		protocol_id: u8, // 0 or 1 or 2
+		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		let coin_in = take_from_balance<T>(slot, amount, true, ctx);
-		let amount = coin_in.value();
 
 		let token_type = type_name::get<T>().into_string();
 
+		let mut coin_out = coin::zero<SUI>(ctx);
+		let amount_min_out = 0;
+
 		if(token_type == type_name::get<SUI>().into_string()) {
 			transfer::public_transfer(coin_in, ctx.sender());
+		} else if (protocol_id == 0) {
+			coin_out.join(flow_x_protocol::swap_exact_input<T, SUI>(
+				container, coin_in, ctx
+			));
+		} else if (protocol_id == 1) {
+			coin_out.join(blue_move_protocol::swap_exact_input<T, SUI>(
+				coin_in, amount_min_out, dex_info, ctx
+			));
 		} else {
-			let coin_out: Coin<SUI> = router::swap_exact_input_<T, SUI>(
-				coin_in.value(), 
-				coin_in, 
-				0, // ! amount out min 
-				dex_info, 
-				ctx
+			let (out, left) = move_pump_protocol::sui_from_coin<T>(
+				config, coin_in, amount_min_out, clock, ctx
 			);
-			transfer::public_transfer(coin_out, ctx.sender());
+			add_to_balance<T>(slot, left.into_balance<T>());
+			coin_out.join(out);
 		};
+
+		transfer::public_transfer(coin_out, ctx.sender());
 
 		event::emit(Withdraw {		
 			slot: object::id_address(slot),
-			token: type_name::get<T>().into_string(),
+			token: token_type,
 			amount
 		});
 	}
