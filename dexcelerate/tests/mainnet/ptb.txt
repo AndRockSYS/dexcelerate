@@ -41,10 +41,10 @@ sui client ptb \
 
 === V2 Swaps ===
 
-// Buy with Base (FlowX) - EKVPK8UGC1RVnnPUYYxhNi9csVrvd5zSu8WhrgKWXAQM
+// Buy with Base (FlowX) - JByXnyqFVTaf9JjD1Z8wytqnLQUVBhSRR1NsqUhx5j6S
 sui client ptb \
 --move-call 0x87723fbb19c1859f0b7d1950915c37bc9debd6cbaf5a3f2ee77117261fbc6449::slot_swap_v2::buy_with_base "<0xd9f9b0b4f35276eecd1eea6985bfabe2a2bbd5575f9adb9162ccbdb4ddebde7f::smove::SMOVE>" \
-@0xeaa7c04af26437b0018d35a694bd71dd7b7a1a00a8db682f3c1f638f9b9a4aca @0x4d712af622585d75e944b811dfbd4c009771ff0380b41ef748e6453b548596c8 0 10000 \
+@0xeaa7c04af26437b0018d35a694bd71dd7b7a1a00a8db682f3c1f638f9b9a4aca @0x4d712af622585d75e944b811dfbd4c009771ff0380b41ef748e6453b548596c8 5000 10000 \
 @0x255393f862876f0a13eeffabf14577d2fc273152a5647ecf34fe7dce6269d211 \
 100000 0 \
 @0xb65dcbf63fd3ad5d0ebfbf334780dc9f785eff38a4459e37ab08fa79576ee511 \
