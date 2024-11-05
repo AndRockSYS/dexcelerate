@@ -15,9 +15,36 @@ module dexcelerate::swap_router {
 	use dexcelerate::fee::{FeeManager};
 
 	const ENotEnoughToCoverGas: u64 = 0;
+	const EZeroCoins: u64 = 1;
+	const ETwoCoins: u64 = 2;
 
-	public(package) fun to_base_v2<T>(
+	public(package) fun swap_v2<A, B>(
+		coin_in: Coin<A>,
+		amount_min_out: u64,
+		container: &mut Container, // flow_x
+		dex_info: &mut Dex_Info, // blue_move
+		protocol_id: u8, // 0 or 1
+		ctx: &mut TxContext
+	): Coin<B> {
+		let coin_out = coin::zero<B>(ctx);
+
+		if(protocol_id == 0) {
+			coin_out.join(flow_x_protocol::swap_exact_input<A, B>(
+				container, coin_in, ctx
+			));
+		} else {
+			coin_out.join(blue_move_protocol::swap_exact_input<A, B>(
+				coin_in, amount_min_out, dex_info, ctx
+			));
+		};
+
+		coin_out
+	}
+
+	public(package) fun swap_base_v2<T>(
 		coin_in: Coin<T>,
+		base_in: Coin<SUI>,
+		amount_min_out: u64,
 		container: &mut Container, // flow_x
 		dex_info: &mut Dex_Info, // blue_move
 		config: &mut Configuration, // move_pump
@@ -25,28 +52,54 @@ module dexcelerate::swap_router {
 		clock: &Clock,
 		ctx: &mut TxContext
 	): (Coin<SUI>, Coin<T>) {
-		let mut coin_in_left = coin::zero<T>(ctx);
-		let mut coin_out = coin::zero<SUI>(ctx);
-
-		let amount_min_out = 0;
-
-		if(protocol_id == 0) {
-			coin_out.join(flow_x_protocol::swap_exact_input<T, SUI>(
-				container, coin_in, ctx
-			));
-		} else if(protocol_id == 1) {
-			coin_out.join(blue_move_protocol::swap_exact_input<T, SUI>(
-				coin_in, amount_min_out, dex_info, ctx
-			));
-		} else {
-			let (out, left) = move_pump_protocol::sui_from_coin<T>(
-				config, coin_in, amount_min_out, clock, ctx
-			);
-			coin_in_left.join(left);
-			coin_out.join(out);
+		assert!(coin_in.value() > 0 || base_in.value() > 0, EZeroCoins);
+		if(coin_in.value() > 0 && base_in.value() > 0) {
+			abort(ETwoCoins);
 		};
 
-		(coin_out, coin_in_left)
+		if(coin_in.value() > 0) {
+			// swapping T to SUI
+
+			let mut coin_in_left = coin::zero<T>(ctx);
+			let mut base_out = coin::zero<SUI>(ctx);
+
+			if(protocol_id == 2) {
+				let (out, left) = move_pump_protocol::sui_from_coin<T>(
+					config, coin_in, amount_min_out, clock, ctx
+				);
+				coin_in_left.join(left);
+				base_out.join(out);
+			} else {
+				base_out.join(swap_v2<T, SUI>(
+					coin_in, amount_min_out,
+					container, dex_info, protocol_id,
+					ctx
+				));
+			};
+
+			(base_out, coin_in_left)
+		} else {
+			// swapping SUI to T
+
+			let mut base_in_left = coin::zero<SUI>(ctx);
+			let mut coin_out = coin::zero<T>(ctx);
+
+			if(protocol_id == 2) {
+				let (left, out) = move_pump_protocol::sui_to_coin<T>(
+					config, dex_info, base_in, amount_min_out, clock, ctx
+				);
+				base_in_left.join(left);
+				coin_out.join(out);
+			} else {
+				coin_out.join(swap_v2<SUI, T>(
+					base_in, amount_min_out,
+					container, dex_info, protocol_id,
+					ctx
+				));
+			};
+
+			(base_in_left, coin_out)
+		}
 	} 
 
 	public(package) fun calc_and_transfer_fees(
