@@ -2,6 +2,12 @@ module dexcelerate::utils {
 	use std::type_name;
 	use std::bcs::to_bytes;
 
+	const EWrongSwapType: u64 = 0;
+
+	public fun not_base<T>() {
+		assert!(!is_base<T>(), EWrongSwapType);
+	}
+
 	public fun is_base<T>(): bool {
 		let t_type = to_bytes(&type_name::get<T>());
 		let sui_type = b"0x2::sui::SUI";
