@@ -8,7 +8,7 @@ module dexcelerate::slot_swap_v3 {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
-	use dexcelerate::platform_permission::{Platform};
+	use dexcelerate::platform_permission::{Self, Platform};
 
 	use turbos_clmm::pool::{Pool as TPool, Versioned};
 	use cetus_clmm::config::{GlobalConfig};
@@ -27,15 +27,18 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		pool: &mut TPool<A, SUI, FeeType>,
 		versioned: &Versioned,
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		let mut coin_in = slot.take_from_balance_with_permission<SUI>(amount_in, platform, clock, ctx);
 
-		coin_in = swap_router::calc_and_transfer_fees(
+		coin_in = swap_router::take_fee(
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
 		);
+
+		swap_router::take_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
 
 		let (coin_a, coin_b) = swap_router::swap_v3_turbos<A, SUI, FeeType>(
 			coin::zero<A>(ctx), coin_in,
@@ -56,8 +59,7 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		pool: &mut TPool<A, SUI, FeeType>,
 		versioned: &Versioned,
-		gas_lended: u64,
-		gas_sponsor: Option<address>,
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -68,11 +70,11 @@ module dexcelerate::slot_swap_v3 {
 			versioned, clock, ctx
 		);
 
-		coin_b = swap_router::calc_and_transfer_fees(
+		coin_b = swap_router::take_fee(
 			bank, fee_manager, coin_b, users_fee_percent, total_fee_percent, ctx
 		);
 
-		swap_router::check_and_transfer_sponsor_gas(&mut coin_b, gas_lended, gas_sponsor, ctx);
+		swap_router::take_sponsor_gas_sui(&mut coin_b, gas, platform_permission::get_address(platform), ctx);
 
 		slot.add_to_balance<A>(coin_a.into_balance<A>());
 		slot.add_to_balance<SUI>(coin_b.into_balance<SUI>());
@@ -121,15 +123,18 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, SUI>,
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		let mut coin_in = slot.take_from_balance_with_permission<SUI>(amount_in, platform, clock, ctx);
 
-		coin_in = swap_router::calc_and_transfer_fees(
+		coin_in = swap_router::take_fee(
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
 		);
+
+		swap_router::take_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
 
 		let (coin_a, coin_b) = swap_router::swap_v3_cetus<A, SUI>(
 			coin::zero<A>(ctx), coin_in, config, pool, clock, ctx
@@ -148,8 +153,7 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, SUI>,
-		gas_lended: u64,
-		gas_sponsor: Option<address>,
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -160,11 +164,11 @@ module dexcelerate::slot_swap_v3 {
 			coin_in, coin::zero<SUI>(ctx), config, pool, clock, ctx
 		);
 
-		coin_b = swap_router::calc_and_transfer_fees(
+		coin_b = swap_router::take_fee(
 			bank, fee_manager, coin_b, users_fee_percent, total_fee_percent, ctx
 		);
 
-		swap_router::check_and_transfer_sponsor_gas(&mut coin_b, gas_lended, gas_sponsor, ctx);
+		swap_router::take_sponsor_gas_sui(&mut coin_b, gas, platform_permission::get_address(platform), ctx);
 
 		slot.add_to_balance<SUI>(coin_b.into_balance<SUI>());
 		slot.add_to_balance<A>(coin_a.into_balance<A>());

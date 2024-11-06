@@ -191,7 +191,7 @@ module dexcelerate::swap_router {
 		(coin_a_out, coin_b_out)
 	}
 
-	public(package) fun calc_and_transfer_fees(
+	public(package) fun take_fee(
 		bank: &mut Bank,
 		fee_manager: &mut FeeManager,
 		mut payment: Coin<SUI>,
@@ -208,15 +208,15 @@ module dexcelerate::swap_router {
 		payment
 	}
 
-	public(package) fun check_and_transfer_sponsor_gas(
+	public(package) fun take_sponsor_gas_sui(
 		coin: &mut Coin<SUI>,
-		gas_lended: u64,
-		gas_sponsor: Option<address>,
+		gas_amount: u64,
+		platform: address,
 		ctx: &mut TxContext
 	) {
-		if(gas_sponsor.is_some()) {
-			assert!(coin.value() >= gas_lended, ENotEnoughToCoverGas);
-			transfer::public_transfer(coin.split(gas_lended, ctx), gas_sponsor.destroy_some());
+		if(gas_amount > 0) {
+			assert!(coin.value() >= gas_amount, ENotEnoughToCoverGas);
+			transfer::public_transfer(coin.split(gas_amount, ctx), platform);
 		};
 	}
 }

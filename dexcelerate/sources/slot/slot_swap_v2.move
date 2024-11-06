@@ -8,7 +8,7 @@ module dexcelerate::slot_swap_v2 {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
-	use dexcelerate::platform_permission::{Platform};
+	use dexcelerate::platform_permission::{Self, Platform};
 
 	use flow_x::factory::{Container};
 	use blue_move::swap::{Dex_Info};
@@ -27,19 +27,22 @@ module dexcelerate::slot_swap_v2 {
 		dex_info: &mut Dex_Info, // blue_move
 		config: &mut Configuration, // move_pump
 		protocol_id: u8, // 0 or 1 or 2
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		let mut coin_in = slot.take_from_balance_with_permission<SUI>(amount_in, platform, clock, ctx);
 
-		coin_in = swap_router::calc_and_transfer_fees(
+		coin_in = swap_router::take_fee(
 			bank, 
 			fee_manager, 
 			coin_in, 
 			users_fee_percent, 
 			total_fee_percent, ctx
 		);
+
+		swap_router::take_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
 		
 		let (base_left, coin_out) = swap_router::swap_base_v2<T>(
 			coin::zero<T>(ctx), coin_in, amount_min_out,
@@ -63,8 +66,7 @@ module dexcelerate::slot_swap_v2 {
 		dex_info: &mut Dex_Info, // blue_move
 		config: &mut Configuration, // move_pump
 		protocol_id: u8, // 0 or 1 or 2
-		gas_lended: u64,
-		gas_sponsor: Option<address>,
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -77,14 +79,14 @@ module dexcelerate::slot_swap_v2 {
 			clock, ctx
 		);
 
-		base_out = swap_router::calc_and_transfer_fees(
+		base_out = swap_router::take_fee(
 			bank, fee_manager, 
 			base_out, 
 			users_fee_percent, total_fee_percent,
 			ctx
 		);
 
-		swap_router::check_and_transfer_sponsor_gas(&mut base_out, gas_lended, gas_sponsor, ctx);
+		swap_router::take_sponsor_gas_sui(&mut base_out, gas, platform_permission::get_address(platform), ctx);
 
 		slot.add_to_balance<SUI>(base_out.into_balance<SUI>());
 		slot.add_to_balance<T>(coin_in_left.into_balance<T>());
@@ -97,12 +99,15 @@ module dexcelerate::slot_swap_v2 {
 		container: &mut Container, // flow_x
 		dex_info: &mut Dex_Info, // blue_move
 		protocol_id: u8, // 0 or 1
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		utils::not_base<A>();
 		utils::not_base<B>();
+
+		// take coin_a equals to gas -> swap -> transfer
 
 		let coin_out = swap_router::swap_v2<A, B>(
 			slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx), amount_min_out,
