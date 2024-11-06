@@ -55,6 +55,10 @@ module dexcelerate::platform_permission {
 		});
 	}
 
+	public fun get_address(platform: &Platform): address {
+		*&platform.platform_address
+	}
+
 	public(package) fun has_permission(
 		platform: &Platform,
 		slot_owner: address,
