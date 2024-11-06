@@ -6,10 +6,15 @@ module dexcelerate::swap_router {
 
 	use flow_x::factory::{Container};
 	use dexcelerate::flow_x_protocol;
+
 	use blue_move::swap::{Dex_Info};
 	use dexcelerate::blue_move_protocol;
+
 	use move_pump::move_pump::{Configuration};
 	use dexcelerate::move_pump_protocol;
+
+	use turbos_clmm::pool::{Pool as TPool, Versioned};
+	use dexcelerate::turbos_clmm_protocol;
 
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
@@ -105,6 +110,47 @@ module dexcelerate::swap_router {
 			(base_in_left, coin_out)
 		}
 	} 
+
+	public(package) fun swap_v3_turbos<A, B, FeeType>(
+		coin_a_in: Coin<A>,
+		coin_b_in: Coin<B>,
+		pool: &mut TPool<A, B, FeeType>,
+		versioned: &Versioned,
+		clock: &Clock,
+		ctx: &mut TxContext
+	): (Coin<A>, Coin<B>) {
+		assert!(coin_a_in.value() > 0 || coin_b_in.value() > 0, EZeroCoins);
+		if(coin_a_in.value() > 0 && coin_a_in.value() > 0) {
+			abort(ETwoCoins)
+		};
+
+		let mut coin_a_out = coin::zero<A>(ctx);
+		let mut coin_b_out = coin::zero<B>(ctx);
+
+		if(coin_a_in.value() > 0 ) {
+			let (coin_out, coin_in_left) = turbos_clmm_protocol::swap_a_to_b<A, B, FeeType>(
+				pool, 
+				coin_a_in, 
+				clock, versioned, ctx
+			);
+			coin_b_out.join(coin_out);
+			coin_a_out.join(coin_in_left);
+
+			coin_b_in.destroy_zero();
+		} else {
+			let (coin_out, coin_in_left) = turbos_clmm_protocol::swap_b_to_a<A, B, FeeType>(
+				pool, 
+				coin_b_in, 
+				clock, versioned, ctx
+			);
+			coin_a_out.join(coin_out);
+			coin_b_out.join(coin_in_left);
+
+			coin_a_in.destroy_zero();
+		};
+
+		(coin_a_out, coin_b_out)
+	}
 
 	public(package) fun calc_and_transfer_fees(
 		bank: &mut Bank,

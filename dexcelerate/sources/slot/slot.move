@@ -13,8 +13,11 @@ module dexcelerate::slot {
 	use flow_x::factory::{Container};
 	use blue_move::swap::{Dex_Info};
 	use move_pump::move_pump::{Configuration};
-	use dexcelerate::swap_router;
+	use turbos_clmm::pool::{Pool as TPool, Versioned};
+	use cetus_clmm::config::{GlobalConfig};
+	use cetus_clmm::pool::{Pool as CPool};
 
+	use dexcelerate::swap_router;
 	use dexcelerate::utils;
 
 	const ENotASlotOwner: u64 = 0;
@@ -65,15 +68,13 @@ module dexcelerate::slot {
 		slot: &mut Slot, 
 		coin_in: Coin<SUI>, 
 	) {
-		let amount = coin_in.value();
-
-		add_to_balance<SUI>(slot, coin_in.into_balance<SUI>());
-
 		event::emit(Deposit {		
 			slot: object::id_address(slot),
 			token: type_name::get<SUI>().into_string(),
-			amount
+			amount: coin_in.value()
 		});
+
+		add_to_balance<SUI>(slot, coin_in.into_balance<SUI>());
 	}
 
 	public entry fun withdraw_base(
@@ -81,14 +82,25 @@ module dexcelerate::slot {
 		amount: u64, 
 		ctx: &mut TxContext
 	) {
-		let coin_in = take_from_balance<SUI>(slot, amount, true, ctx);
-		transfer::public_transfer(coin_in, ctx.sender());
+		let coin_out = take_from_balance<SUI>(slot, amount, true, ctx);
+		withdraw_after_swap<SUI>(
+			slot, coin_out, ctx
+		);
+	}
 
+	#[allow(lint(self_transfer))]
+	fun withdraw_after_swap<T>(
+		slot: &Slot,
+		base_coin: Coin<SUI>,
+		ctx: &TxContext
+	) {
 		event::emit(Withdraw {		
 			slot: object::id_address(slot),
-			token: type_name::get<SUI>().into_string(),
-			amount
+			token: type_name::get<T>().into_string(),
+			amount: base_coin.value()
 		});
+
+		transfer::public_transfer(base_coin, ctx.sender());
 	}
 
 	public entry fun deposit_v2<T>(
@@ -103,22 +115,14 @@ module dexcelerate::slot {
 	) {
 		utils::not_base<T>();
 
-		let amount = coin_in.value();
-
 		let (base_out, coin_in_left) = swap_router::swap_base_v2<T>(
 			coin_in, coin::zero<SUI>(ctx), 0, // ! amount_min_out
 			container, dex_info, config, protocol_id,
 			clock, ctx
 		);
 
-		add_to_balance<SUI>(slot, base_out.into_balance<SUI>());	
 		transfer::public_transfer(coin_in_left, ctx.sender());
-	
-		event::emit(Deposit {		
-			slot: object::id_address(slot),
-			token: type_name::get<T>().into_string(),
-			amount
-		});
+		deposit_base(slot, base_out);
 	}
 
 	public entry fun withdraw_v2<T>(
@@ -142,51 +146,54 @@ module dexcelerate::slot {
 		);
 
 		add_to_balance<T>(slot, coin_in_left.into_balance<T>());	
-		transfer::public_transfer(base_out, ctx.sender());
 
-		event::emit(Withdraw {		
-			slot: object::id_address(slot),
-			token: type_name::get<T>().into_string(),
-			amount
-		});
+		withdraw_after_swap<SUI>(
+			slot, base_out, ctx
+		);
 	}
 
-	// public entry fun deposit_v3_turbos<T, FeeType>(
-	// 	slot: &mut Slot,
-	// 	pool: &mut TPool<T, B, FeeType>,
-	// 	coin_in: Coin<T>,
-	// 	versioned: &Versioned,
-	// 	clock: &Clock,
-	// 	ctx: &mut TxContext
-	// ) {
-	// 	let token_type = type_name::get<T>().into_string();
+	public entry fun deposit_v3_turbos<T, FeeType>(
+		slot: &mut Slot,
+		pool: &mut TPool<T, SUI, FeeType>,
+		coin_in: Coin<T>,
+		versioned: &Versioned,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		utils::not_base<T>();
 
-	// 	if(token_type == type_name::get<SUI>().into_string()) {
-	// 		add_to_balance<T>(slot, coin_in.into_balance<T>());
-	// 	} else {
-	// 		let (coin_out, coin_in_left) = swap_router::to_base_v2<T>(
-	// 			coin_in,
-	// 			container, dex_info, config, protocol_id,
-	// 			clock, ctx
-	// 		);
-	// 		add_to_balance<SUI>(slot, coin_out.into_balance<SUI>());	
-	// 		transfer::public_transfer(coin_in_left, ctx.sender());
-	// 	};
-	// 	public(package) fun swap_a_to_b<A, B, FeeType>(
-	// 	pool: &mut Pool<A, B, FeeType>,
-	// 	coin_in: Coin<A>,
-	// 	clock: &Clock,
-	// 	versioned: &Versioned,
-	// 	ctx: &mut TxContext
-	// ): (Coin<B>, Coin<A>)
-	// 	if sui deposit
-	// 	if another token - swap a to b
-	// }
+		let (coin_a, coin_b) = swap_router::swap_v3_turbos<T, SUI, FeeType>(
+			coin_in, coin::zero<SUI>(ctx),
+			pool,
+			versioned, clock, ctx
+		);
 
-	// public entry fun withdraw_v3_turbos() {
-	// 	if sui deposit
-	// 	if another token - swap a to b
-	// }
+		transfer::public_transfer(coin_a, ctx.sender());
+		deposit_base(slot, coin_b);
+	}
+
+	public entry fun withdraw_v3_turbos<T, FeeType>(
+		slot: &mut Slot,
+		pool: &mut TPool<T, SUI, FeeType>,
+		coin_in: Coin<T>,
+		versioned: &Versioned,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		utils::not_base<T>();
+
+		let (coin_a, coin_b) = swap_router::swap_v3_turbos<T, SUI, FeeType>(
+			coin_in, coin::zero<SUI>(ctx),
+			pool,
+			versioned, clock, ctx
+		);
+
+		add_to_balance<T>(slot, coin_a.into_balance<T>());
+
+		withdraw_after_swap<SUI>(
+			slot, coin_b, ctx
+		);
+	}
 
 	// public entry fun deposit_v3_cetus() {
 	// 	if sui deposit
