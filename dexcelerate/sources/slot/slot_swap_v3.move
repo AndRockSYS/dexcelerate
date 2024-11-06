@@ -10,10 +10,8 @@ module dexcelerate::slot_swap_v3 {
 	use dexcelerate::fee::{FeeManager};
 
 	use turbos_clmm::pool::{Pool as TPool, Versioned};
-
 	use cetus_clmm::config::{GlobalConfig};
 	use cetus_clmm::pool::{Pool as CPool};
-	use dexcelerate::cetus_clmm_protocol;
 
 	use dexcelerate::swap_router;
 
@@ -128,12 +126,12 @@ module dexcelerate::slot_swap_v3 {
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
 		);
 
-		let (coin_out, coin_in_left) = cetus_clmm_protocol::swap_b_to_a<A, SUI>(
-			config, pool, coin_in, clock, ctx
+		let (coin_a, coin_b) = swap_router::swap_v3_cetus<A, SUI>(
+			coin::zero<A>(ctx), coin_in, config, pool, clock, ctx
 		);
 
-		slot.add_to_balance<SUI>(coin_in_left.into_balance<SUI>());
-		slot.add_to_balance<A>(coin_out.into_balance<A>());
+		slot.add_to_balance<SUI>(coin_b.into_balance<SUI>());
+		slot.add_to_balance<A>(coin_a.into_balance<A>());
 	}
 
 	public entry fun sell_with_base_cetus<A>(
@@ -152,18 +150,18 @@ module dexcelerate::slot_swap_v3 {
 	) {
 		let coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
 
-		let (coin_in_left, mut coin_out) = cetus_clmm_protocol::swap_a_to_b<A, SUI>(
-			config, pool, coin_in, clock, ctx
+		let (coin_a, mut coin_b) = swap_router::swap_v3_cetus<A, SUI>(
+			coin_in, coin::zero<SUI>(ctx), config, pool, clock, ctx
 		);
 
-		coin_out = swap_router::calc_and_transfer_fees(
-			bank, fee_manager, coin_out, users_fee_percent, total_fee_percent, ctx
+		coin_b = swap_router::calc_and_transfer_fees(
+			bank, fee_manager, coin_b, users_fee_percent, total_fee_percent, ctx
 		);
 
-		swap_router::check_and_transfer_sponsor_gas(&mut coin_out, gas_lended, gas_sponsor, ctx);
+		swap_router::check_and_transfer_sponsor_gas(&mut coin_b, gas_lended, gas_sponsor, ctx);
 
-		slot.add_to_balance<SUI>(coin_out.into_balance<SUI>());
-		slot.add_to_balance<A>(coin_in_left.into_balance<A>());
+		slot.add_to_balance<SUI>(coin_b.into_balance<SUI>());
+		slot.add_to_balance<A>(coin_a.into_balance<A>());
 	}
 
 	public entry fun swap_cetus<A, B> (
@@ -175,26 +173,18 @@ module dexcelerate::slot_swap_v3 {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		let mut coin_a = coin::zero<A>(ctx);
-		let mut coin_b = coin::zero<B>(ctx);
-
-		if(a_to_b) {
-			let (coin_a_out, coin_b_out) = cetus_clmm_protocol::swap_a_to_b<A, B>(
-				config, pool, 
-				slot.take_from_balance<A>(amount_in, true, ctx), 
-				clock, ctx
-			);
-			coin_a.join(coin_a_out);
-			coin_b.join(coin_b_out);
-		} else {
-			let (coin_a_out, coin_b_out) = cetus_clmm_protocol::swap_b_to_a<A, B>(
-				config, pool, 
-				slot.take_from_balance<B>(amount_in, true, ctx), 
-				clock, ctx
-			);
-			coin_a.join(coin_a_out);
-			coin_b.join(coin_b_out);
-		};	
+		let (coin_a, coin_b) = 
+			if(a_to_b) { 
+				swap_router::swap_v3_cetus<A, B>(
+					slot.take_from_balance<A>(amount_in, true, ctx), coin::zero<B>(ctx),
+					config, pool, clock, ctx
+				)
+			} else {
+				swap_router::swap_v3_cetus<A, B>(
+					coin::zero<A>(ctx), slot.take_from_balance<B>(amount_in, true, ctx),
+					config, pool, clock, ctx
+				)
+			};
 
 		slot.add_to_balance<A>(coin_a.into_balance<A>());
 		slot.add_to_balance<B>(coin_b.into_balance<B>());

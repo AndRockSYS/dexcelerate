@@ -16,6 +16,10 @@ module dexcelerate::swap_router {
 	use turbos_clmm::pool::{Pool as TPool, Versioned};
 	use dexcelerate::turbos_clmm_protocol;
 
+	use cetus_clmm::config::{GlobalConfig};
+	use cetus_clmm::pool::{Pool as CPool};
+	use dexcelerate::cetus_clmm_protocol;
+
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
 
@@ -148,6 +152,41 @@ module dexcelerate::swap_router {
 
 			coin_a_in.destroy_zero();
 		};
+
+		(coin_a_out, coin_b_out)
+	}
+
+	public(package) fun swap_v3_cetus<A, B>(
+		coin_a_in: Coin<A>,
+		coin_b_in: Coin<B>,
+		config: &GlobalConfig,
+		pool: &mut CPool<A, B>,
+		clock: &Clock,
+		ctx: &mut TxContext
+	): (Coin<A>, Coin<B>) {
+		assert!(coin_a_in.value() > 0 || coin_b_in.value() > 0, EZeroCoins);
+		if(coin_a_in.value() > 0 && coin_a_in.value() > 0) {
+			abort(ETwoCoins)
+		};
+
+		let (coin_a_out, coin_b_out) = 
+			if(coin_a_in.value() > 0) {
+				coin_b_in.destroy_zero();
+
+				cetus_clmm_protocol::swap_a_to_b<A, B>(
+					config, pool,
+					coin_a_in,
+					clock, ctx
+				)
+			} else {
+				coin_a_in.destroy_zero();
+
+				cetus_clmm_protocol::swap_b_to_a<A, B>(
+					config, pool,
+					coin_b_in,
+					clock, ctx
+				)
+			};
 
 		(coin_a_out, coin_b_out)
 	}

@@ -175,7 +175,7 @@ module dexcelerate::slot {
 	public entry fun withdraw_v3_turbos<T, FeeType>(
 		slot: &mut Slot,
 		pool: &mut TPool<T, SUI, FeeType>,
-		coin_in: Coin<T>,
+		amount: u64,
 		versioned: &Versioned,
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -183,7 +183,7 @@ module dexcelerate::slot {
 		utils::not_base<T>();
 
 		let (coin_a, coin_b) = swap_router::swap_v3_turbos<T, SUI, FeeType>(
-			coin_in, coin::zero<SUI>(ctx),
+			take_from_balance<T>(slot, amount, true, ctx), coin::zero<SUI>(ctx),
 			pool,
 			versioned, clock, ctx
 		);
@@ -195,15 +195,45 @@ module dexcelerate::slot {
 		);
 	}
 
-	// public entry fun deposit_v3_cetus() {
-	// 	if sui deposit
-	// 	if another token - swap a to b
-	// }
+	public entry fun deposit_v3_cetus<T>(
+		slot: &mut Slot,
+		coin_in: Coin<T>,
+		config: &GlobalConfig,
+		pool: &mut CPool<T, SUI>,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		utils::not_base<T>();
 
-	// public entry fun withdraw_v3_cetus() {
-	// 	if sui deposit
-	// 	if another token - swap a to b		
-	// }
+		let (coin_a, coin_b) = swap_router::swap_v3_cetus<T, SUI>(
+			coin_in, coin::zero<SUI>(ctx),
+			config, pool, clock, ctx
+		);
+
+		transfer::public_transfer(coin_a, ctx.sender());
+		deposit_base(slot, coin_b);
+	}
+
+	public entry fun withdraw_v3_cetus<T>(
+		slot: &mut Slot,
+		amount: u64,
+		config: &GlobalConfig,
+		pool: &mut CPool<T, SUI>,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		utils::not_base<T>();
+
+		let (coin_a, coin_b) = swap_router::swap_v3_cetus<T, SUI>(
+			take_from_balance<T>(slot, amount, true, ctx), coin::zero<SUI>(ctx),
+			config, pool, clock, ctx
+		);
+
+		transfer::public_transfer(coin_a, ctx.sender());
+		withdraw_after_swap<SUI>(
+			slot, coin_b, ctx
+		);
+	}
 
 	public(package) fun add_to_balance<T>(slot: &mut Slot, balance: Balance<T>) {
 		let coin_type = type_name::get<T>().into_string();
