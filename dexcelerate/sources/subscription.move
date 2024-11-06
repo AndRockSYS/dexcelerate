@@ -142,7 +142,7 @@ module dexcelerate::subscription {
 			return
 		};
 
-		let sui_coin = slot::take_from_balance<SUI>(user_slot, amount, false, ctx);
+		let sui_coin = slot::take_from_balance<SUI>(user_slot, amount, ctx);
 		split_and_pay_with_sui(
 			fee_manager,
 			bank, 
@@ -174,7 +174,7 @@ module dexcelerate::subscription {
 			return
 		};
 
-		let sui_coin = slot::take_from_balance<T>(user_slot, amount, false, ctx);
+		let sui_coin = slot::take_from_balance<T>(user_slot, amount, ctx);
 		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input(
 			sui_coin,
 			amount_out_min,

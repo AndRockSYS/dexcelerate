@@ -8,6 +8,7 @@ module dexcelerate::slot_swap_v3 {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
+	use dexcelerate::platform_permission::{Platform};
 
 	use turbos_clmm::pool::{Pool as TPool, Versioned};
 	use cetus_clmm::config::{GlobalConfig};
@@ -26,10 +27,11 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		pool: &mut TPool<A, SUI, FeeType>,
 		versioned: &Versioned,
+		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		let mut coin_in = slot.take_from_balance<SUI>(amount_in, true, ctx);
+		let mut coin_in = slot.take_from_balance_with_permission<SUI>(amount_in, platform, clock, ctx);
 
 		coin_in = swap_router::calc_and_transfer_fees(
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
@@ -56,11 +58,12 @@ module dexcelerate::slot_swap_v3 {
 		versioned: &Versioned,
 		gas_lended: u64,
 		gas_sponsor: Option<address>,
+		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		let (coin_a, mut coin_b) = swap_router::swap_v3_turbos<A, SUI, FeeType>(
-			slot.take_from_balance<A>(amount_in, true, ctx), coin::zero<SUI>(ctx),
+			slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx), coin::zero<SUI>(ctx),
 			pool,
 			versioned, clock, ctx
 		);
@@ -81,6 +84,7 @@ module dexcelerate::slot_swap_v3 {
 		a_to_b: bool,
 		pool: &mut TPool<A, B, FeeType>,
 		versioned: &Versioned,
+		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
@@ -91,9 +95,9 @@ module dexcelerate::slot_swap_v3 {
 		let mut coin_b_in = coin::zero<B>(ctx);
 
 		if(a_to_b) {
-			coin_a_in.join(slot.take_from_balance<A>(amount_in, true, ctx));
+			coin_a_in.join(slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx));
 		} else {
-			coin_b_in.join(slot.take_from_balance<B>(amount_in, true, ctx));
+			coin_b_in.join(slot.take_from_balance_with_permission<B>(amount_in, platform, clock, ctx));
 		};
 
 		let (coin_a, coin_b) = swap_router::swap_v3_turbos<A, B, FeeType>(
@@ -117,10 +121,11 @@ module dexcelerate::slot_swap_v3 {
 		amount_in: u64,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, SUI>,
+		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		let mut coin_in = slot.take_from_balance<SUI>(amount_in, true, ctx);
+		let mut coin_in = slot.take_from_balance_with_permission<SUI>(amount_in, platform, clock, ctx);
 
 		coin_in = swap_router::calc_and_transfer_fees(
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
@@ -145,10 +150,11 @@ module dexcelerate::slot_swap_v3 {
 		pool: &mut CPool<A, SUI>,
 		gas_lended: u64,
 		gas_sponsor: Option<address>,
+		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		let coin_in = slot.take_from_balance<A>(amount_in, true, ctx);
+		let coin_in = slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx);
 
 		let (coin_a, mut coin_b) = swap_router::swap_v3_cetus<A, SUI>(
 			coin_in, coin::zero<SUI>(ctx), config, pool, clock, ctx
@@ -170,18 +176,19 @@ module dexcelerate::slot_swap_v3 {
 		a_to_b: bool,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, B>,
+		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		let (coin_a, coin_b) = 
 			if(a_to_b) { 
 				swap_router::swap_v3_cetus<A, B>(
-					slot.take_from_balance<A>(amount_in, true, ctx), coin::zero<B>(ctx),
+					slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx), coin::zero<B>(ctx),
 					config, pool, clock, ctx
 				)
 			} else {
 				swap_router::swap_v3_cetus<A, B>(
-					coin::zero<A>(ctx), slot.take_from_balance<B>(amount_in, true, ctx),
+					coin::zero<A>(ctx), slot.take_from_balance_with_permission<B>(amount_in, platform, clock, ctx),
 					config, pool, clock, ctx
 				)
 			};

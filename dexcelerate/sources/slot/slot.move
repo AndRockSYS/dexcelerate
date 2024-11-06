@@ -18,6 +18,7 @@ module dexcelerate::slot {
 	use cetus_clmm::pool::{Pool as CPool};
 
 	use dexcelerate::swap_router;
+	use dexcelerate::platform_permission::{Self, Platform};
 	use dexcelerate::utils;
 
 	const ENotASlotOwner: u64 = 0;
@@ -82,7 +83,7 @@ module dexcelerate::slot {
 		amount: u64, 
 		ctx: &mut TxContext
 	) {
-		let coin_out = take_from_balance<SUI>(slot, amount, true, ctx);
+		let coin_out = take_from_balance_with_sender<SUI>(slot, amount, ctx);
 		withdraw_after_swap<SUI>(
 			slot, coin_out, ctx
 		);
@@ -137,7 +138,7 @@ module dexcelerate::slot {
 	) {
 		utils::not_base<T>();
 
-		let coin_in = take_from_balance<T>(slot, amount, true, ctx);
+		let coin_in = take_from_balance_with_sender<T>(slot, amount, ctx);
 
 		let (base_out, coin_in_left) = swap_router::swap_base_v2<T>(
 			coin_in, coin::zero<SUI>(ctx), 0, // ! amount_min_out
@@ -183,7 +184,7 @@ module dexcelerate::slot {
 		utils::not_base<T>();
 
 		let (coin_a, coin_b) = swap_router::swap_v3_turbos<T, SUI, FeeType>(
-			take_from_balance<T>(slot, amount, true, ctx), coin::zero<SUI>(ctx),
+			take_from_balance_with_sender<T>(slot, amount, ctx), coin::zero<SUI>(ctx),
 			pool,
 			versioned, clock, ctx
 		);
@@ -225,7 +226,7 @@ module dexcelerate::slot {
 		utils::not_base<T>();
 
 		let (coin_a, coin_b) = swap_router::swap_v3_cetus<T, SUI>(
-			take_from_balance<T>(slot, amount, true, ctx), coin::zero<SUI>(ctx),
+			take_from_balance_with_sender<T>(slot, amount, ctx), coin::zero<SUI>(ctx),
 			config, pool, clock, ctx
 		);
 
@@ -246,16 +247,39 @@ module dexcelerate::slot {
 		};
 	}
 
-	public(package) fun take_from_balance<T>(
+	public(package) fun take_from_balance_with_sender<T>(
 		slot: &mut Slot, 
-		amount: u64, 
-		check_sender: bool,
+		amount: u64,
 		ctx: &mut TxContext
 	): Coin<T> {
-		if(check_sender) {
+		assert!(*&slot.owner == ctx.sender(), ENotASlotOwner);
+
+		take_from_balance(slot, amount, ctx)
+	}
+
+	public(package) fun take_from_balance_with_permission<T>(
+		slot: &mut Slot, 
+		amount: u64,
+		platform: &Platform, 
+		clock: &Clock,
+		ctx: &mut TxContext
+	): Coin<T> {
+		let has_permission = platform_permission::has_permission(
+			platform, slot.get_owner(), clock, ctx
+		);
+
+		if(!has_permission) {
 			assert!(*&slot.owner == ctx.sender(), ENotASlotOwner);
 		};
 
+		take_from_balance<T>(slot, amount, ctx)
+	}
+
+	public(package) fun take_from_balance<T>(
+		slot: &mut Slot, 
+		amount: u64, 
+		ctx: &mut TxContext
+	): Coin<T> {
 		let coin_type = type_name::get<T>().into_string();
 		assert!(bag::contains<String>(&slot.balances, coin_type), ESlotHasNoType);
 

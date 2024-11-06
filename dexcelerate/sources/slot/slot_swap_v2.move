@@ -8,6 +8,7 @@ module dexcelerate::slot_swap_v2 {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
+	use dexcelerate::platform_permission::{Platform};
 
 	use flow_x::factory::{Container};
 	use blue_move::swap::{Dex_Info};
@@ -26,10 +27,11 @@ module dexcelerate::slot_swap_v2 {
 		dex_info: &mut Dex_Info, // blue_move
 		config: &mut Configuration, // move_pump
 		protocol_id: u8, // 0 or 1 or 2
+		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		let mut coin_in = slot.take_from_balance<SUI>(amount_in, true, ctx);
+		let mut coin_in = slot.take_from_balance_with_permission<SUI>(amount_in, platform, clock, ctx);
 
 		coin_in = swap_router::calc_and_transfer_fees(
 			bank, 
@@ -63,10 +65,11 @@ module dexcelerate::slot_swap_v2 {
 		protocol_id: u8, // 0 or 1 or 2
 		gas_lended: u64,
 		gas_sponsor: Option<address>,
+		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		let coin_in = slot.take_from_balance<T>(amount_in, true, ctx);
+		let coin_in = slot.take_from_balance_with_permission<T>(amount_in, platform, clock, ctx);
 
 		let (mut base_out, coin_in_left) = swap_router::swap_base_v2<T>(
 			coin_in, coin::zero<SUI>(ctx), amount_min_out,
@@ -94,13 +97,15 @@ module dexcelerate::slot_swap_v2 {
 		container: &mut Container, // flow_x
 		dex_info: &mut Dex_Info, // blue_move
 		protocol_id: u8, // 0 or 1
+		platform: &Platform,
+		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		utils::not_base<A>();
 		utils::not_base<B>();
 
 		let coin_out = swap_router::swap_v2<A, B>(
-			slot.take_from_balance<A>(amount_in, true, ctx), amount_min_out,
+			slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx), amount_min_out,
 			container, dex_info, protocol_id,
 			ctx
 		);
