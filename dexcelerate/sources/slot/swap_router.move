@@ -124,7 +124,7 @@ module dexcelerate::swap_router {
 		ctx: &mut TxContext
 	): (Coin<A>, Coin<B>) {
 		assert!(coin_a_in.value() > 0 || coin_b_in.value() > 0, EZeroCoins);
-		if(coin_a_in.value() > 0 && coin_a_in.value() > 0) {
+		if(coin_a_in.value() > 0 && coin_b_in.value() > 0) {
 			abort(ETwoCoins)
 		};
 
@@ -165,7 +165,7 @@ module dexcelerate::swap_router {
 		ctx: &mut TxContext
 	): (Coin<A>, Coin<B>) {
 		assert!(coin_a_in.value() > 0 || coin_b_in.value() > 0, EZeroCoins);
-		if(coin_a_in.value() > 0 && coin_a_in.value() > 0) {
+		if(coin_a_in.value() > 0 && coin_b_in.value() > 0) {
 			abort(ETwoCoins)
 		};
 
