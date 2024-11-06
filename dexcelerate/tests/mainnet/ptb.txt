@@ -10,6 +10,33 @@ Dexcelerate FeeManager = 0xcb49aeda2550930a17f8dc40f89026d52448855396ccc7b1a97c8
 
 Slot = 0x09643c76566ecaeb5417ab52513aab93004c1923f2bfcb0c6c842add4d18641c
 
+=== Permission Related ===
+
+// Set platform address - G8J5jo5aQenqQqG7A8sMUmQVSw5KensgkJHyCUcCM1M
+sui client ptb \
+--move-call 0x142eb3ed009d68f083576135608eaf2eefe178311565697cf6e0e168cc372706::platform_permission::update_platform_address \
+@0x845cf3708c48b633fade24520381bdcef082f20e960a161ab9166077cda6fb85 @0x79b54c6d7303af6c317c286e2605e6c9da5974da66bd0b056edd0db7634de983
+
+// Give permission - AxLpAjcVCUro2GCY7weZzV2awjcYZT5QDH3b6rJZXimr
+sui client ptb \
+--move-call 0x142eb3ed009d68f083576135608eaf2eefe178311565697cf6e0e168cc372706::platform_permission::give_permission \
+@0x845cf3708c48b633fade24520381bdcef082f20e960a161ab9166077cda6fb85 @0x0000000000000000000000000000000000000000000000000000000000000006
+
+// Buy with Base (BlueMove) + Permission (no gas fee returning) - 6cNdhQQJ8K1uNSjAdss2gA9v7keEzU3QYBSyKjdedVAU
+sui client ptb \
+--move-call 0x142eb3ed009d68f083576135608eaf2eefe178311565697cf6e0e168cc372706::slot_swap_v2::buy_with_base \
+"<0xd9f9b0b4f35276eecd1eea6985bfabe2a2bbd5575f9adb9162ccbdb4ddebde7f::smove::SMOVE>" \
+@0xc2538f7ab03d896893092b07578299a077fecef1405f61d902e06d9ac144116e @0x15dfb10edaef6f0d35dc6a4d99250c3308a85f1d9854892eae3250afe89f3988 \
+0 0 \
+@0xd98d02ba63178f5cd0cdcd1ac879c3cde690e163f9e7db3c37f87f0bc07dcc12 \
+10000 0 \
+@0xb65dcbf63fd3ad5d0ebfbf334780dc9f785eff38a4459e37ab08fa79576ee511 \
+@0x3f2d9f724f4a1ce5e71676448dc452be9a6243dac9c5b975a588c8c867066e92 \
+@0xd746495d04a6119987c2b9334c5fefd7d8cff52a8a02a3ea4e3995b9a041ace4 \
+1 \
+@0x845cf3708c48b633fade24520381bdcef082f20e960a161ab9166077cda6fb85 \
+@0x0000000000000000000000000000000000000000000000000000000000000006
+
 === New Slot (Deposits/Withdraws across all DEXs) ===
 
 // Deposit Base - FCvaTRn5sS4V3UtBZrHwaGtwoBVneqKcb7GEU6pY59d8
