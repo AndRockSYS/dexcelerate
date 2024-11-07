@@ -22,7 +22,7 @@ module dexcelerate::slot_swap_v2 {
 		total_fee_percent: u64,
 		slot: &mut Slot,
 		amount_in: u64,
-		amount_min_out: u64,
+		mut amount_min_out: u64,
 		container: &mut Container, // flow_x
 		dex_info: &mut Dex_Info, // blue_move
 		config: &mut Configuration, // move_pump
@@ -42,7 +42,13 @@ module dexcelerate::slot_swap_v2 {
 			total_fee_percent, ctx
 		);
 
-		swap_router::take_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
+		swap_router::return_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
+
+		amount_min_out = if (gas > 0) {
+			amount_min_out / 2
+		} else {
+			amount_min_out
+		};
 		
 		let (base_left, coin_out) = swap_router::swap_base_v2<T>(
 			coin::zero<T>(ctx), coin_in, amount_min_out,
@@ -86,12 +92,13 @@ module dexcelerate::slot_swap_v2 {
 			ctx
 		);
 
-		swap_router::take_sponsor_gas_sui(&mut base_out, gas, platform_permission::get_address(platform), ctx);
+		swap_router::return_sponsor_gas_sui(&mut base_out, gas, platform_permission::get_address(platform), ctx);
 
 		slot.add_to_balance<SUI>(base_out.into_balance<SUI>());
 		slot.add_to_balance<T>(coin_in_left.into_balance<T>());
 	}
 
+	// ! if sponsored or executed by the platform and coin a has no pool with SUI will revert
 	public entry fun swap_a_to_b<A, B>(
 		slot: &mut Slot,
 		amount_in: u64,
@@ -107,11 +114,16 @@ module dexcelerate::slot_swap_v2 {
 		utils::not_base<A>();
 		utils::not_base<B>();
 
-		// take coin_a equals to gas -> swap -> transfer
-
-		let coin_out = swap_router::swap_v2<A, B>(
+		let mut coin_out = swap_router::swap_v2<A, B>(
 			slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx), amount_min_out,
 			container, dex_info, protocol_id,
+			ctx
+		);
+
+		swap_router::return_sponsor_gas_coin_v2<B>(
+			&mut coin_out,
+			container, dex_info, protocol_id,
+			gas, platform_permission::get_address(platform),
 			ctx
 		);
 

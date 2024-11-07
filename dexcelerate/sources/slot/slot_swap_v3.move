@@ -38,7 +38,7 @@ module dexcelerate::slot_swap_v3 {
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
 		);
 
-		swap_router::take_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
+		swap_router::return_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
 
 		let (coin_a, coin_b) = swap_router::swap_v3_turbos<A, SUI, FeeType>(
 			coin::zero<A>(ctx), coin_in,
@@ -74,7 +74,7 @@ module dexcelerate::slot_swap_v3 {
 			bank, fee_manager, coin_b, users_fee_percent, total_fee_percent, ctx
 		);
 
-		swap_router::take_sponsor_gas_sui(&mut coin_b, gas, platform_permission::get_address(platform), ctx);
+		swap_router::return_sponsor_gas_sui(&mut coin_b, gas, platform_permission::get_address(platform), ctx);
 
 		slot.add_to_balance<A>(coin_a.into_balance<A>());
 		slot.add_to_balance<SUI>(coin_b.into_balance<SUI>());
@@ -134,7 +134,7 @@ module dexcelerate::slot_swap_v3 {
 			bank, fee_manager, coin_in, users_fee_percent, total_fee_percent, ctx
 		);
 
-		swap_router::take_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
+		swap_router::return_sponsor_gas_sui(&mut coin_in, gas, platform_permission::get_address(platform), ctx);
 
 		let (coin_a, coin_b) = swap_router::swap_v3_cetus<A, SUI>(
 			coin::zero<A>(ctx), coin_in, config, pool, clock, ctx
@@ -168,7 +168,7 @@ module dexcelerate::slot_swap_v3 {
 			bank, fee_manager, coin_b, users_fee_percent, total_fee_percent, ctx
 		);
 
-		swap_router::take_sponsor_gas_sui(&mut coin_b, gas, platform_permission::get_address(platform), ctx);
+		swap_router::return_sponsor_gas_sui(&mut coin_b, gas, platform_permission::get_address(platform), ctx);
 
 		slot.add_to_balance<SUI>(coin_b.into_balance<SUI>());
 		slot.add_to_balance<A>(coin_a.into_balance<A>());

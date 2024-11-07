@@ -208,7 +208,35 @@ module dexcelerate::swap_router {
 		payment
 	}
 
-	public(package) fun take_sponsor_gas_sui(
+	public(package) fun return_sponsor_gas_coin_v2<T>(
+		coin: &mut Coin<T>,
+		container: &mut Container, // flow_x
+		dex_info: &mut Dex_Info, // blue_move
+		protocol_id: u8, // 0 or 1
+		gas_amount: u64, // put 0 if user does it on his own
+		platform: address,
+		ctx: &mut TxContext
+	) {
+		if(gas_amount > 0) {
+			let coin_value = if(protocol_id == 0) {
+				flow_x_protocol::get_required_coin_amount<T>(
+					container, gas_amount
+				)
+			} else {
+				blue_move_protocol::get_required_coin_amount<T>(
+					dex_info, gas_amount
+				)
+			};
+			assert!(coin.value() > coin_value, ENotEnoughToCoverGas);
+
+			let gas_coin = swap_v2<T, SUI>(
+				coin.split(coin_value, ctx), 0, container, dex_info, protocol_id, ctx
+			);
+			transfer::public_transfer(gas_coin, platform);
+		};
+	}
+
+	public(package) fun return_sponsor_gas_sui(
 		coin: &mut Coin<SUI>,
 		gas_amount: u64,
 		platform: address,
