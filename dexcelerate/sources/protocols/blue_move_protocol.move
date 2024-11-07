@@ -25,8 +25,8 @@ module dexcelerate::blue_move_protocol {
 		required_sui_out: u64
 	): u64 {
 		let pool = swap::get_pool<SUI, T>(dex_info);
-		let (reserve_0, reserve_1, _) = swap::get_amounts<SUI, T>(pool);
+		let (reserve_x, reserve_y) = swap::token_reserves<SUI, T>(pool);
 
-		((reserve_1 * required_sui_out as u128) as u64) / reserve_0
+		((reserve_y * required_sui_out) as u128 / (reserve_x as u128)) as u64
 	}
 }

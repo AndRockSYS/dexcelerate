@@ -102,7 +102,7 @@ module dexcelerate::slot_swap_v2 {
 	public entry fun swap_a_to_b<A, B>(
 		slot: &mut Slot,
 		amount_in: u64,
-		amount_min_out: u64,
+		mut amount_min_out: u64,
 		container: &mut Container, // flow_x
 		dex_info: &mut Dex_Info, // blue_move
 		protocol_id: u8, // 0 or 1
@@ -114,16 +114,24 @@ module dexcelerate::slot_swap_v2 {
 		utils::not_base<A>();
 		utils::not_base<B>();
 
-		let mut coin_out = swap_router::swap_v2<A, B>(
-			slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx), amount_min_out,
+		let mut coin_in = slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx);
+
+		swap_router::return_sponsor_gas_coin_v2<A>(
+			&mut coin_in,
 			container, dex_info, protocol_id,
+			gas, platform_permission::get_address(platform),
 			ctx
 		);
 
-		swap_router::return_sponsor_gas_coin_v2<B>(
-			&mut coin_out,
+		amount_min_out = if(gas > 0) {
+			amount_min_out / 2
+		} else {
+			amount_min_out
+		};
+
+		let coin_out = swap_router::swap_v2<A, B>(
+			coin_in, amount_min_out,
 			container, dex_info, protocol_id,
-			gas, platform_permission::get_address(platform),
 			ctx
 		);
 

@@ -59,8 +59,8 @@ module dexcelerate::cetus_clmm_protocol {
 	): u64 {
     	let swap_result = pool::calculate_swap_result<T, SUI>(
         	pool, true, false, gas_amount
-		);
+		); 
 
-		pool::calculated_swap_result_amount_out(&swap_result)
+		pool::calculated_swap_result_amount_in(&swap_result)
 	}
 } 
