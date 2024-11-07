@@ -208,6 +208,39 @@ module dexcelerate::swap_router {
 		payment
 	}
 
+	public(package) fun return_sponsor_gas_coin_turbos(
+
+	) {
+
+	}
+
+	public(package) fun return_sponsor_gas_coin_cetus<T>(
+		coin: &mut Coin<T>,
+		config: &GlobalConfig,
+		pool: &mut CPool<T, SUI>,
+		gas_amount: u64,
+		platform: address,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		if(gas_amount > 0) {
+			let coin_value = cetus_clmm_protocol::get_required_coin_amount<T>(
+				pool, gas_amount
+			);
+
+			assert!(coin.value() > coin_value, ENotEnoughToCoverGas);
+
+			let (coin_a, gas_coin) = swap_v3_cetus<T, SUI>(
+				coin.split(coin_value, ctx), coin::zero<SUI>(ctx),
+				config, pool, clock, ctx
+			);
+
+			coin.join(coin_a);
+
+			transfer::public_transfer(gas_coin, platform);
+		};
+	}
+
 	public(package) fun return_sponsor_gas_coin_v2<T>(
 		coin: &mut Coin<T>,
 		container: &mut Container, // flow_x

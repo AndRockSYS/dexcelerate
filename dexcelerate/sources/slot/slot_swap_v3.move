@@ -180,21 +180,41 @@ module dexcelerate::slot_swap_v3 {
 		a_to_b: bool,
 		config: &GlobalConfig,
 		pool: &mut CPool<A, B>,
+		sui_pool: &mut CPool<A, SUI>,
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
 		let (coin_a, coin_b) = 
 			if(a_to_b) { 
+				let mut coin_in = slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx);
+
+				swap_router::return_sponsor_gas_coin_cetus<A>(
+					&mut coin_in, 
+					config, sui_pool,
+					gas, platform_permission::get_address(platform),
+					clock, ctx
+				);
+
 				swap_router::swap_v3_cetus<A, B>(
-					slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx), coin::zero<B>(ctx),
+					coin_in, coin::zero<B>(ctx),
 					config, pool, clock, ctx
 				)
 			} else {
-				swap_router::swap_v3_cetus<A, B>(
+				let (mut coin_a_out, coin_b_out) = swap_router::swap_v3_cetus<A, B>(
 					coin::zero<A>(ctx), slot.take_from_balance_with_permission<B>(amount_in, platform, clock, ctx),
 					config, pool, clock, ctx
-				)
+				);
+
+				swap_router::return_sponsor_gas_coin_cetus<A>(
+					&mut coin_a_out, 
+					config, sui_pool,
+					gas, platform_permission::get_address(platform),
+					clock, ctx
+				);
+
+				(coin_a_out, coin_b_out)
 			};
 
 		slot.add_to_balance<A>(coin_a.into_balance<A>());

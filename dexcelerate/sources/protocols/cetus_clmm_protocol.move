@@ -1,9 +1,10 @@
 module dexcelerate::cetus_clmm_protocol {
 	use sui::clock::{Clock};
 	use sui::coin::{Self, Coin};
+	use sui::sui::{SUI};
 
 	use cetus_clmm::config::{GlobalConfig};
-	use cetus_clmm::pool::{Pool};
+	use cetus_clmm::pool::{Self, Pool};
 	use cetus::router;
 
 	public(package) fun swap_a_to_b<A, B>(
@@ -51,4 +52,15 @@ module dexcelerate::cetus_clmm_protocol {
 			ctx
 		)
 	}
-}
+
+	public(package) fun get_required_coin_amount<T>(
+		pool: &Pool<T, SUI>,
+		gas_amount: u64
+	): u64 {
+    	let swap_result = pool::calculate_swap_result<T, SUI>(
+        	pool, true, false, gas_amount
+		);
+
+		pool::calculated_swap_result_amount_out(&swap_result)
+	}
+} 
