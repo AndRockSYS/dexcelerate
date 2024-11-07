@@ -1,8 +1,10 @@
 module dexcelerate::turbos_clmm_protocol {
 	use sui::coin::{Coin};
+	use sui::sui::{SUI};
 	use sui::clock::{Clock};
 
 	use turbos_clmm::pool::{Pool, Versioned};
+	use turbos_clmm::pool_fetcher;
 	use turbos_clmm::swap_router;
 
 	public(package) fun swap_a_to_b<A, B, FeeType>(
@@ -50,4 +52,21 @@ module dexcelerate::turbos_clmm_protocol {
 			ctx
     	)
 	}
+
+	// public(package) fun get_required_coin_amount<T, FeeType>(
+	// 	pool: &mut Pool<T, SUI, FeeType>,
+	// 	gas_amount: u64,
+	// 	versioned: &Versioned,
+	// 	clock: &Clock,
+	// 	ctx: &mut TxContext
+	// ): u64 {
+    // 	let swap_result = pool_fetcher::compute_swap_result<T, SUI, FeeType>(
+	// 		pool, true, 
+	// 		gas_amount as u128, false,
+	// 		4295048016,
+	// 		clock, versioned, ctx
+	// 	);
+
+	// 	swap_result.amount_b
+	// }
 }
