@@ -7,9 +7,9 @@ module dexcelerate::flow_x_protocol {
 	use flow_x::swap_utils;
 	use flow_x::router;
 
-	public(package) fun swap_exact_input<A, B>(
-		container: &mut Container,
+	public(package) fun swap_a_to_b<A, B>(
 		coin_in: Coin<A>,
+		container: &mut Container,
 		ctx: &mut TxContext
 	): Coin<B> {
 		router::swap_exact_input_direct<A, B>(

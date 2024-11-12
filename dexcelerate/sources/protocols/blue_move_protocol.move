@@ -5,7 +5,7 @@ module dexcelerate::blue_move_protocol {
 	use blue_move::router;
 	use blue_move::swap::{Self, Dex_Info};
 
-	public(package) fun swap_exact_input<A, B>(
+	public(package) fun swap_a_to_b<A, B>(
 		coin_in: Coin<A>,
 		amount_out_min: u64,
 		dex_info: &mut Dex_Info,
