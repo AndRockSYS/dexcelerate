@@ -208,12 +208,6 @@ module dexcelerate::swap_router {
 		payment
 	}
 
-	public(package) fun return_sponsor_gas_coin_turbos(
-
-	) {
-
-	}
-
 	public(package) fun return_sponsor_gas_coin_cetus<T>(
 		coin: &mut Coin<T>,
 		config: &GlobalConfig,
