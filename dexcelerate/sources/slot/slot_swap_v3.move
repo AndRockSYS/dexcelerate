@@ -86,6 +86,7 @@ module dexcelerate::slot_swap_v3 {
 		a_to_b: bool,
 		pool: &mut TPool<A, B, FeeType>,
 		versioned: &Versioned,
+		gas: u64, // put 0 if user does it on his own
 		platform: &Platform,
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -95,6 +96,11 @@ module dexcelerate::slot_swap_v3 {
 
 		let mut coin_a_in = coin::zero<A>(ctx);
 		let mut coin_b_in = coin::zero<B>(ctx);
+
+		if(gas > 0) {
+			let gas_coin = slot.take_from_balance_with_permission<SUI>(gas, platform, clock, ctx);
+			transfer::public_transfer(gas_coin, platform_permission::get_address(platform));
+		};
 
 		if(a_to_b) {
 			coin_a_in.join(slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx));
