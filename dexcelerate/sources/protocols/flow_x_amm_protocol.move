@@ -1,4 +1,4 @@
-module dexcelerate::flow_x_protocol {
+module dexcelerate::flow_x_amm_protocol {
 	use sui::coin::{Coin};
 	use sui::sui::{SUI};
 

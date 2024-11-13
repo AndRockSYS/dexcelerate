@@ -14,6 +14,7 @@ flow_x = { local = "../lib/flow_x" }
 cetus = { local = "../lib/cetus" }
 # CetusClmm = { override = true, git = "https://github.com/CetusProtocol/cetus-clmm-interface.git", subdir = "sui/clmmpool", rev = "mainnet-v1.23.1" }
 TurbosCLMM = { git = "https://github.com/turbos-finance/turbos-sui-move-interface.git", subdir = "clmm", rev = "framework/mainnet" }
+flowx_clmm = { local = "../lib/flow_x_clmm" }
 
 # deepbook = { git = "https://github.com/MystenLabs/deepbookv3", subdir = "packages/deepbook", rev = "framework/testnet" }
 # token = { git = "https://github.com/MystenLabs/deepbookv3", subdir = "packages/token", rev = "framework/testnet" }

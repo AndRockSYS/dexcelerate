@@ -5,14 +5,18 @@ module dexcelerate::swap_utils {
 	use sui::coin::{Self, Coin};
 
 	use flow_x::factory::{Container};
-	use dexcelerate::flow_x_protocol;
+	use dexcelerate::flow_x_amm_protocol;
 
 	use blue_move::swap::{Dex_Info};
 	use dexcelerate::blue_move_protocol;
 
 	use cetus_clmm::config::{GlobalConfig};
-	use cetus_clmm::pool::{Pool};
+	use cetus_clmm::pool::{Pool as CPool};
 	use dexcelerate::cetus_clmm_protocol;
+
+	use flowx_clmm::pool::{Pool as FPool};
+    use flowx_clmm::versioned::Versioned;
+	use dexcelerate::flow_x_clmm_protocol;
 
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
@@ -50,8 +54,33 @@ module dexcelerate::swap_utils {
 		};
 	}
 
+	public(package) fun repay_sponsor_gas_flow_x_clmm<T>(
+		pool: &mut FPool<T, SUI>,
+		coin: &mut Coin<T>,
+		gas_amount: u64,
+		platform: address,
+		versioned: &mut Versioned,
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		if(gas_amount > 0) {
+			let coin_value = flow_x_clmm_protocol::get_required_coin_amount<T>(pool, gas_amount);
+
+			assert!(coin.value() > coin_value, ENotEnoughToCoverGas);
+
+			let (coin_a, gas_coin) = flow_x_clmm_protocol::swap<T, SUI>(
+				pool, coin.split(coin_value, ctx), coin::zero<SUI>(ctx),
+				versioned, clock, ctx
+			);
+
+			coin.join(coin_a);
+
+			transfer::public_transfer(gas_coin, platform);
+		};
+	}
+
 	public(package) fun repay_sponsor_gas_cetus<T>(
-		pool: &mut Pool<T, SUI>,
+		pool: &mut CPool<T, SUI>,
 		coin: &mut Coin<T>,
 		gas_amount: u64,
 		platform: address,
@@ -88,7 +117,7 @@ module dexcelerate::swap_utils {
 	) {
 		if(gas_amount > 0) {
 			let coin_value = if(protocol_id == 0) {
-				flow_x_protocol::get_required_coin_amount<T>(
+				flow_x_amm_protocol::get_required_coin_amount<T>(
 					container, gas_amount
 				)
 			} else {
@@ -99,7 +128,7 @@ module dexcelerate::swap_utils {
 			assert!(coin.value() > coin_value, ENotEnoughToCoverGas);
 
 			let gas_coin = 	if(protocol_id == 0) {
-				flow_x_protocol::swap_a_to_b<T, SUI>(
+				flow_x_amm_protocol::swap_a_to_b<T, SUI>(
 					coin.split(coin_value, ctx), container, ctx
 				)
 			} else {

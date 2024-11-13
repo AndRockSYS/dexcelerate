@@ -4,7 +4,7 @@ module dexcelerate::slot_swap_amm {
 	use sui::sui::{SUI};
 	use sui::coin::{Self, Coin};
 
-	use dexcelerate::flow_x_protocol;
+	use dexcelerate::flow_x_amm_protocol;
 	use flow_x::factory::{Container};
 	use dexcelerate::blue_move_protocol;
 	use blue_move::swap::{Dex_Info};
@@ -190,7 +190,7 @@ module dexcelerate::slot_swap_amm {
 		ctx: &mut TxContext
 	): Coin<B> {
 		if(protocol_id == 0) {
-			flow_x_protocol::swap_a_to_b<A, B>(
+			flow_x_amm_protocol::swap_a_to_b<A, B>(
 				coin_in, container, ctx
 			)
 		} else {
