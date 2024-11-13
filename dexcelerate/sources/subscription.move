@@ -1,9 +1,3 @@
-/*
-	Remove withdraw at all, 
-	because all the coins are splitted into fee and bank modules, 
-	so they can be withdrawn from over there
-*/
-
 module dexcelerate::subscription {
 	use std::ascii::{String};
 
@@ -96,7 +90,7 @@ module dexcelerate::subscription {
 		amount_out_min: u64,
 		ctx: &mut TxContext
 	) {
-		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input(
+		let coin_out: Coin<SUI> = blue_move_protocol::swap_a_to_b(
 			payment,
 			amount_out_min,
 			dex_info,
@@ -134,11 +128,11 @@ module dexcelerate::subscription {
 		user_fee_percent: u64,
 		ctx: &mut TxContext
 	) {
-		assert!(bag::contains<address>(&subscription.subscribers, slot::get_owner(user_slot)), ENotASubscriber);
+		assert!(bag::contains<address>(&subscription.subscribers, user_slot.owner()), ENotASubscriber);
 
 		let balance_amount = slot::balance<SUI>(user_slot);
 		if(balance_amount < amount) {
-			bag::remove<address, bool>(&mut subscription.subscribers, slot::get_owner(user_slot));
+			bag::remove<address, bool>(&mut subscription.subscribers, user_slot.owner());
 			return
 		};
 
@@ -166,16 +160,16 @@ module dexcelerate::subscription {
 		amount_out_min: u64,
 		ctx: &mut TxContext
 	) {
-		assert!(bag::contains<address>(&subscription.subscribers, slot::get_owner(user_slot)), ENotASubscriber);
+		assert!(bag::contains<address>(&subscription.subscribers, user_slot.owner()), ENotASubscriber);
 
-		let balance_amount = slot::balance<T>(user_slot);
+		let balance_amount = user_slot.balance<T>();
 		if(balance_amount < amount) {
-			bag::remove<address, bool>(&mut subscription.subscribers, slot::get_owner(user_slot));
+			bag::remove<address, bool>(&mut subscription.subscribers, user_slot.owner());
 			return
 		};
 
-		let sui_coin = slot::take_from_balance<T>(user_slot, amount, ctx);
-		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input(
+		let sui_coin = user_slot.take_from_balance<T>(amount, ctx);
+		let coin_out: Coin<SUI> = blue_move_protocol::swap_a_to_b(
 			sui_coin,
 			amount_out_min,
 			dex_info,
