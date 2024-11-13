@@ -1,16 +1,16 @@
 module dexcelerate::cetus_clmm_protocol {
 	use sui::clock::{Clock};
-	use sui::coin::{Self, Coin};
+	use sui::coin::{Coin};
 	use sui::sui::{SUI};
 
 	use cetus_clmm::config::{GlobalConfig};
 	use cetus_clmm::pool::{Self, Pool};
 	use cetus::router;
 
-	use dexcelerate::swap_utils;
+	use dexcelerate::utils;
 
-	const A_TO_B: u64 = 4295048016;
-	const B_TO_A: u64 = 79226673515401279992447579055;
+	const A_TO_B: u128 = 4295048016;
+	const B_TO_A: u128 = 79226673515401279992447579055;
 
 	public(package) fun swap<A, B> (
 		pool: &mut Pool<A, B>,
@@ -20,7 +20,7 @@ module dexcelerate::cetus_clmm_protocol {
 		clock: &Clock,
 		ctx: &mut TxContext
 	): (Coin<A>, Coin<B>) {
-		swap_utils::check_amounts<A, B>(&coin_a_in, &coin_b_in);
+		utils::check_amounts<A, B>(&coin_a_in, &coin_b_in);
 
 		let coin_a_amount = coin_a_in.value();
 		let amount_in = if(coin_a_amount > 0) {coin_a_in.value()} else {coin_a_amount};
