@@ -11,14 +11,17 @@ module dexcelerate::slot_balance_manager {
 	use flow_x::factory::{Container};
 	use blue_move::swap::{Dex_Info};
 	use move_pump::move_pump::{Configuration};
-	use turbos_clmm::pool::{Pool as TPool, Versioned};
+	use turbos_clmm::pool::{Pool as TPool, Versioned as TVersioned};
 	use cetus_clmm::config::{GlobalConfig};
 	use cetus_clmm::pool::{Pool as CPool};
+	use flowx_clmm::pool::{Pool as FPool};
+    use flowx_clmm::versioned::{Versioned as FVersioned};
 
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::slot_swap_amm;
 	use dexcelerate::turbos_clmm_protocol;
 	use dexcelerate::cetus_clmm_protocol;
+	use dexcelerate::flow_x_clmm_protocol;
 
 	use dexcelerate::utils;
 
@@ -116,7 +119,7 @@ module dexcelerate::slot_balance_manager {
 		coin_in: Coin<T>,
 
 		pool: &mut TPool<T, SUI, FeeType>,
-		versioned: &Versioned,
+		versioned: &TVersioned,
 
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -136,7 +139,7 @@ module dexcelerate::slot_balance_manager {
 		amount: u64,
 
 		pool: &mut TPool<T, SUI, FeeType>,
-		versioned: &Versioned,
+		versioned: &TVersioned,
 
 		clock: &Clock,
 		ctx: &mut TxContext
@@ -195,6 +198,50 @@ module dexcelerate::slot_balance_manager {
 		);
 
 		transfer::public_transfer(coin_a, ctx.sender());
+		withdraw_base_internal<SUI>(
+			slot, coin_b, ctx
+		);
+	}
+
+	public entry fun deposit_flow_x_clmm<T>(
+		slot: &mut Slot,
+		coin_in: Coin<T>,
+
+		pool: &mut FPool<T, SUI>,
+		versioned: &mut FVersioned,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		utils::not_base<T>();
+
+		let (coin_a, coin_b) = flow_x_clmm_protocol::swap<T, SUI>(
+			pool, coin_in, coin::zero<SUI>(ctx), versioned, clock, ctx
+		);
+
+		transfer::public_transfer(coin_a, ctx.sender());
+		deposit_base(slot, coin_b);
+	}
+
+	public entry fun withdraw_flow_x_clmm<T>(
+		slot: &mut Slot,
+		amount: u64,
+
+		pool: &mut FPool<T, SUI>,
+		versioned: &mut FVersioned,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		utils::not_base<T>();
+
+		let (coin_a, coin_b) = flow_x_clmm_protocol::swap<T, SUI>(
+			pool, 
+			slot.take_from_balance_with_sender<T>(amount, ctx), coin::zero<SUI>(ctx), 
+			versioned, clock, ctx
+		);
+
+		slot.add_to_balance<T>(coin_a.into_balance<T>());
 		withdraw_base_internal<SUI>(
 			slot, coin_b, ctx
 		);
