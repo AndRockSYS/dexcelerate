@@ -22,7 +22,7 @@ module dexcelerate::slot_swap_amm {
 	public entry fun swap_with_base<T>(
 		slot: &mut Slot,
 		amount_in: u64,
-		amount_min_out: u64,
+		mut amount_min_out: u64,
 		is_base_in: bool,
 
 		bank: &mut Bank,
@@ -55,6 +55,8 @@ module dexcelerate::slot_swap_amm {
 		};
 
 		if(is_base_in) {
+			let amount_before = base_in.value();
+
 			swap_utils::take_fee(
 				bank, fee_manager, &mut base_in, 
 				users_fee_percent, total_fee_percent, ctx
@@ -64,7 +66,7 @@ module dexcelerate::slot_swap_amm {
 				&mut base_in, gas, platform_permission::get_address(platform), ctx
 			);
 
-			// todo change amount_out on fees applying
+			amount_min_out = ((amount_after * amount_min_out as u128) / base_in.value() as u128) as u64)
 		};
 
 		let (mut base_out, coin_out) = swap_base_amm_no_fees<T>(
