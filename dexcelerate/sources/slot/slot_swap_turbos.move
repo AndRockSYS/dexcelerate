@@ -7,7 +7,7 @@ module dexcelerate::slot_swap_turbos {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
-	use dexcelerate::platform_permission::{Self, Platform};
+	use dexcelerate::platform::{Self, Platform};
 
 	use turbos_clmm::pool::{Pool, Versioned};
 	use dexcelerate::turbos_clmm_protocol;
@@ -52,7 +52,7 @@ module dexcelerate::slot_swap_turbos {
 			);
 
 			swap_utils::repay_sponsor_gas<SUI>(
-				&mut base_in, gas, platform_permission::get_address(platform), ctx
+				&mut base_in, gas, platform::get_address(platform), ctx
 			);
 		};
 
@@ -66,7 +66,7 @@ module dexcelerate::slot_swap_turbos {
 			);
 
 			swap_utils::repay_sponsor_gas<SUI>(
-				&mut base_out, gas, platform_permission::get_address(platform), ctx
+				&mut base_out, gas, platform::get_address(platform), ctx
 			);
 		};
 
@@ -110,7 +110,7 @@ module dexcelerate::slot_swap_turbos {
 
 		if(gas > 0) {
 			let gas_coin = slot.take_from_balance_with_permission<SUI>(gas, platform, clock, ctx);
-			transfer::public_transfer(gas_coin, platform_permission::get_address(platform));
+			transfer::public_transfer(gas_coin, platform::get_address(platform));
 		};
 
 		slot.add_to_balance<A>(coin_a.into_balance<A>());

@@ -1,4 +1,4 @@
-module dexcelerate::platform_permission {
+module dexcelerate::platform {
 	use sui::event;
 	use sui::clock::{Self, Clock};
 	use sui::table::{Self, Table};
@@ -10,7 +10,7 @@ module dexcelerate::platform_permission {
 	public struct Platform has key, store {
 		id: UID,
 		permission: Table<address, u64>,
-		platform_address: address
+		relay_wallet: address
 	}
 
 	public struct PermissionUpdated has copy, drop, store {
@@ -22,18 +22,18 @@ module dexcelerate::platform_permission {
 			Platform {
 				id: object::new(ctx),
 				permission: table::new<address, u64>(ctx),
-				platform_address: ctx.sender()
+				relay_wallet: ctx.sender()
 			}
 		);
 	}
 
-	public entry fun update_platform_address(
+	public entry fun update_relay_wallet(
 		platform: &mut Platform,
 		new_platform: address,
 		ctx: &mut TxContext
 	) {
-		assert!(*&platform.platform_address == ctx.sender(), ENotAPlatform);
-		*&mut platform.platform_address = new_platform;
+		assert!(*&platform.relay_wallet == ctx.sender(), ENotAPlatform);
+		*&mut platform.relay_wallet = new_platform;
 	}
 
 	public entry fun give_permission(
@@ -56,7 +56,7 @@ module dexcelerate::platform_permission {
 	}
 
 	public fun get_address(platform: &Platform): address {
-		*&platform.platform_address
+		*&platform.relay_wallet
 	}
 
 	public(package) fun has_permission(
@@ -65,7 +65,7 @@ module dexcelerate::platform_permission {
 		clock: &Clock,
 		ctx: &TxContext
 	): bool {
-		if(ctx.sender() != *&platform.platform_address) {
+		if(ctx.sender() != *&platform.relay_wallet) {
 			return false
 		};
 

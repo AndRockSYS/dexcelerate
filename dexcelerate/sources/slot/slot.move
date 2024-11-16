@@ -9,7 +9,7 @@ module dexcelerate::slot {
 	use sui::balance::{Self, Balance};
 	use sui::coin::{Self, Coin};
 
-	use dexcelerate::platform_permission::{Self, Platform};
+	use dexcelerate::platform::{Self, Platform};
 
 	const ENotASlotOwner: u64 = 0;
 	const ESlotHasNoType: u64 = 1;
@@ -69,7 +69,7 @@ module dexcelerate::slot {
 		clock: &Clock,
 		ctx: &mut TxContext
 	): Coin<T> {
-		let has_permission = platform_permission::has_permission(
+		let has_permission = platform::has_permission(
 			platform, slot.owner(), clock, ctx
 		);
 

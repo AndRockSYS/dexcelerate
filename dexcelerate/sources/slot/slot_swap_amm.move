@@ -14,7 +14,7 @@ module dexcelerate::slot_swap_amm {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
-	use dexcelerate::platform_permission::{Self, Platform};
+	use dexcelerate::platform::{Self, Platform};
 
 	use dexcelerate::utils;
 	use dexcelerate::swap_utils;
@@ -63,10 +63,10 @@ module dexcelerate::slot_swap_amm {
 			);
 
 			swap_utils::repay_sponsor_gas<SUI>(
-				&mut base_in, gas, platform_permission::get_address(platform), ctx
+				&mut base_in, gas, platform::get_address(platform), ctx
 			);
 
-			amount_min_out = ((amount_after * amount_min_out as u128) / base_in.value() as u128) as u64)
+			amount_min_out = ((amount_before as u128) * (amount_min_out as u128) / (base_in.value() as u128)) as u64;
 		};
 
 		let (mut base_out, coin_out) = swap_base_amm_no_fees<T>(
@@ -82,7 +82,7 @@ module dexcelerate::slot_swap_amm {
 			);
 
 			swap_utils::repay_sponsor_gas<SUI>(
-				&mut base_out, gas, platform_permission::get_address(platform), ctx
+				&mut base_out, gas, platform::get_address(platform), ctx
 			);
 		};
 
@@ -118,7 +118,7 @@ module dexcelerate::slot_swap_amm {
 		swap_utils::repay_sponsor_gas_v2<B>(
 			&mut coin_out, 
 			container, dex_info, protocol_id,
-			gas, platform_permission::get_address(platform), ctx
+			gas, platform::get_address(platform), ctx
 		);
 
 		slot.add_to_balance<B>(coin_out.into_balance<B>());

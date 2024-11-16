@@ -7,7 +7,7 @@ module dexcelerate::slot_swap_cetus {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
-	use dexcelerate::platform_permission::{Self, Platform};
+	use dexcelerate::platform::{Self, Platform};
 
 	use cetus_clmm::config::{GlobalConfig};
 	use cetus_clmm::pool::{Pool};
@@ -53,7 +53,7 @@ module dexcelerate::slot_swap_cetus {
 			);
 
 			swap_utils::repay_sponsor_gas<SUI>(
-				&mut base_in, gas, platform_permission::get_address(platform), ctx
+				&mut base_in, gas, platform::get_address(platform), ctx
 			);
 		};
 
@@ -68,7 +68,7 @@ module dexcelerate::slot_swap_cetus {
 			);
 
 			swap_utils::repay_sponsor_gas<SUI>(
-				&mut base_out, gas, platform_permission::get_address(platform), ctx
+				&mut base_out, gas, platform::get_address(platform), ctx
 			);
 		};
 
@@ -108,7 +108,7 @@ module dexcelerate::slot_swap_cetus {
 
 		swap_utils::repay_sponsor_gas_cetus<A>(
 			sui_pool, &mut coin_a_in, 
-			gas, platform_permission::get_address(platform),
+			gas, platform::get_address(platform),
 			config, clock, ctx
 		);
 

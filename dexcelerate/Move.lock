@@ -2,7 +2,7 @@
 
 [move]
 version = 3
-manifest_digest = "6F56797B2F45FA44E63AB80A57E9772CCB4D000D534055FE00CD9BFE656D5010"
+manifest_digest = "6727AF7754B9B07B1FFD4F853F167A183C4FF6BA612587391A700510FFAB944D"
 deps_digest = "52B406A7A21811BEF51751CF88DA0E76DAEFFEAC888D4F4060B1A72BBE7D8D35"
 dependencies = [
   { id = "Sui", name = "Sui" },
@@ -95,7 +95,7 @@ dependencies = [
 
 [[move.package]]
 id = "flowx_clmm"
-source = { local = "../lib/flow_x_clmm" }
+source = { local = "../lib/flowx_clmm" }
 
 dependencies = [
   { id = "Sui", name = "Sui" },

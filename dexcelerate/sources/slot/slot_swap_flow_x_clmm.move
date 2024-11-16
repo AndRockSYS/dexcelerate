@@ -7,7 +7,7 @@ module dexcelerate::slow_swap_flow_x_clmm {
 	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
-	use dexcelerate::platform_permission::{Self, Platform};
+	use dexcelerate::platform::{Self, Platform};
 
 	use flowx_clmm::pool::{Pool};
     use flowx_clmm::versioned::Versioned;
@@ -53,7 +53,7 @@ module dexcelerate::slow_swap_flow_x_clmm {
 			);
 
 			swap_utils::repay_sponsor_gas<SUI>(
-				&mut base_in, gas, platform_permission::get_address(platform), ctx
+				&mut base_in, gas, platform::get_address(platform), ctx
 			);
 		};
 
@@ -67,7 +67,7 @@ module dexcelerate::slow_swap_flow_x_clmm {
 			);
 
 			swap_utils::repay_sponsor_gas<SUI>(
-				&mut base_out, gas, platform_permission::get_address(platform), ctx
+				&mut base_out, gas, platform::get_address(platform), ctx
 			);
 		};
 
@@ -107,7 +107,7 @@ module dexcelerate::slow_swap_flow_x_clmm {
 
 		swap_utils::repay_sponsor_gas_flow_x_clmm<A>(
 			sui_pool, &mut coin_a_in, 
-			gas, platform_permission::get_address(platform),
+			gas, platform::get_address(platform),
 			versioned, clock, ctx
 		);
 
