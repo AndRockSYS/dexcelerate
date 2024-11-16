@@ -33,13 +33,13 @@ module dexcelerate::subscription {
 
 	// Events
 
-	public struct CollectorUpdated has copy, drop, store {
-		new_collector: address
-	}
-
 	public struct Payment has copy, drop, store {
 		payment_info: String,
 		amount: u64
+	}
+
+	public struct CollectorUpdated has copy, drop, store {
+		new_collector: address
 	}
 
 	fun init(ctx: &mut TxContext) {

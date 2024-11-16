@@ -21,9 +21,9 @@ module dexcelerate::slot {
 		balances: Bag
 	}
 
-	public struct SlotCreated has copy, drop, store {
+	public struct SlotInitialized has copy, drop, store {
+		owner: address,
 		slot: address,
-		owner: address
 	}
 
 	public entry fun create(ctx: &mut TxContext) {
@@ -33,9 +33,9 @@ module dexcelerate::slot {
 			balances: bag::new(ctx)
 		};
 
-		event::emit(SlotCreated {
+		event::emit(SlotInitialized {
+			owner: ctx.sender(),
 			slot: object::id_address(&slot),
-			owner: ctx.sender()
 		});
 
 		transfer::public_share_object(slot);

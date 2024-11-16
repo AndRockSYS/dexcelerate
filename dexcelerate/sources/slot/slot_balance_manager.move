@@ -26,13 +26,12 @@ module dexcelerate::slot_balance_manager {
 	use dexcelerate::utils;
 
 	public struct Deposit has copy, drop, store {
-		slot: address,
-		token: String,
-		amount: u64
+		to: address,
+		base_token_amount: u64
 	}
 
 	public struct Withdraw has copy, drop, store {
-		slot: address,
+		to: address,
 		token: String,
 		amount: u64
 	}
@@ -42,9 +41,8 @@ module dexcelerate::slot_balance_manager {
 		coin_in: Coin<SUI>, 
 	) {
 		event::emit(Deposit {		
-			slot: object::id_address(slot),
-			token: type_name::get<SUI>().into_string(),
-			amount: coin_in.value()
+			to: object::id_address(slot),
+			base_token_amount: coin_in.value()
 		});
 
 		slot.add_to_balance<SUI>(coin_in.into_balance<SUI>());
@@ -57,9 +55,7 @@ module dexcelerate::slot_balance_manager {
 	) {
 		let coin_out = slot.take_from_balance_with_sender<SUI>(amount, ctx);
 
-		withdraw_base_internal<SUI>(
-			slot, coin_out, ctx
-		);
+		withdraw_base_internal<SUI>(coin_out, ctx);
 	}
 
 	public entry fun deposit_amm<T>(
@@ -109,9 +105,7 @@ module dexcelerate::slot_balance_manager {
 		);
 
 		slot.add_to_balance<T>(coin_in_left.into_balance<T>());	
-		withdraw_base_internal<SUI>(
-			slot, base_out, ctx
-		);
+		withdraw_base_internal<SUI>(base_out, ctx);
 	}
 
 	public entry fun deposit_turbos<T, FeeType>(
@@ -153,9 +147,7 @@ module dexcelerate::slot_balance_manager {
 		);
 
 		slot.add_to_balance<T>(coin_a.into_balance<T>());
-		withdraw_base_internal<SUI>(
-			slot, coin_b, ctx
-		);
+		withdraw_base_internal<SUI>(coin_b, ctx);
 	}
 
 	public entry fun deposit_cetus<T>(
@@ -198,9 +190,7 @@ module dexcelerate::slot_balance_manager {
 		);
 
 		transfer::public_transfer(coin_a, ctx.sender());
-		withdraw_base_internal<SUI>(
-			slot, coin_b, ctx
-		);
+		withdraw_base_internal<SUI>(coin_b, ctx);
 	}
 
 	public entry fun deposit_flow_x_clmm<T>(
@@ -242,19 +232,16 @@ module dexcelerate::slot_balance_manager {
 		);
 
 		slot.add_to_balance<T>(coin_a.into_balance<T>());
-		withdraw_base_internal<SUI>(
-			slot, coin_b, ctx
-		);
+		withdraw_base_internal<SUI>(coin_b, ctx);
 	}
 
 	#[allow(lint(self_transfer))]
 	fun withdraw_base_internal<T>(
-		slot: &Slot,
 		base_coin: Coin<SUI>,
 		ctx: &TxContext
 	) {
 		event::emit(Withdraw {		
-			slot: object::id_address(slot),
+			to: ctx.sender(),
 			token: type_name::get<T>().into_string(),
 			amount: base_coin.value()
 		});
