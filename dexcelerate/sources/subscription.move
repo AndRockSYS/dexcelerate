@@ -2,7 +2,6 @@ module dexcelerate::subscription {
 	use std::ascii::{String};
 
 	use sui::event;
-	use sui::bag::{Self, Bag};
 
 	use sui::sui::{SUI};
 	use sui::coin::{Coin};
@@ -14,15 +13,8 @@ module dexcelerate::subscription {
 	use blue_move::swap::{Dex_Info};
 	use dexcelerate::blue_move_protocol;
 
-	const ENotASubscriber: u64 = 0;
-
 	public struct CollectorCap has key, store {
 		id: UID
-	}
-	
-	public struct Subscription has key, store {
-		id: UID,
-		subscribers: Bag,
 	}
 
 	// Events
@@ -37,11 +29,6 @@ module dexcelerate::subscription {
 	}
 
 	fun init(ctx: &mut TxContext) {
-		transfer::public_share_object(Subscription {
-			id: object::new(ctx),
-			subscribers: bag::new(ctx)
-		});
-
 		set_collector(CollectorCap {
 			id: object::new(ctx)
 		}, ctx.sender())
@@ -59,7 +46,6 @@ module dexcelerate::subscription {
 	}
 
 	public entry fun subsribe_sui(
-		subscription: &mut Subscription,
 		fee_manager: &mut FeeManager,
 		bank: &mut Bank,
 		item_info: String,
@@ -75,12 +61,9 @@ module dexcelerate::subscription {
 			user_fee_percent,
 			ctx
 		);
-
-		bag::add<address, bool>(&mut subscription.subscribers, ctx.sender(), true);
 	}
 
 	public entry fun subscribe<T>(
-		subscription: &mut Subscription,
 		fee_manager: &mut FeeManager,
 		bank: &mut Bank,
 		item_info: String,
@@ -105,21 +88,10 @@ module dexcelerate::subscription {
 			user_fee_percent,
 			ctx
 		);
-
-		bag::add<address, bool>(&mut subscription.subscribers, ctx.sender(), true);
-	}
-
-	public entry fun unsubscribe(
-		subscription: &mut Subscription,
-		ctx: &mut TxContext
-	) {
-		assert!(bag::contains<address>(&subscription.subscribers, ctx.sender()), ENotASubscriber);
-		bag::remove<address, bool>(&mut subscription.subscribers, ctx.sender());
 	}
 
 	public entry fun collect_sui(
 		_: &CollectorCap,
-		subscription: &mut Subscription,
 		fee_manager: &mut FeeManager,
 		bank: &mut Bank,
 		item_info: String,
@@ -128,14 +100,6 @@ module dexcelerate::subscription {
 		user_fee_percent: u64,
 		ctx: &mut TxContext
 	) {
-		assert!(bag::contains<address>(&subscription.subscribers, user_slot.owner()), ENotASubscriber);
-
-		let balance_amount = slot::balance<SUI>(user_slot);
-		if(balance_amount < amount) {
-			bag::remove<address, bool>(&mut subscription.subscribers, user_slot.owner());
-			return
-		};
-
 		let sui_coin = slot::take_from_balance<SUI>(user_slot, amount, ctx);
 		split_and_pay_with_sui(
 			fee_manager,
@@ -149,7 +113,6 @@ module dexcelerate::subscription {
 
 	public entry fun collect<T>(
 		_: &CollectorCap,
-		subscription: &mut Subscription,
 		fee_manager: &mut FeeManager,
 		bank: &mut Bank,
 		item_info: String,
@@ -160,14 +123,6 @@ module dexcelerate::subscription {
 		amount_out_min: u64,
 		ctx: &mut TxContext
 	) {
-		assert!(bag::contains<address>(&subscription.subscribers, user_slot.owner()), ENotASubscriber);
-
-		let balance_amount = user_slot.balance<T>();
-		if(balance_amount < amount) {
-			bag::remove<address, bool>(&mut subscription.subscribers, user_slot.owner());
-			return
-		};
-
 		let sui_coin = user_slot.take_from_balance<T>(amount, ctx);
 		let coin_out: Coin<SUI> = blue_move_protocol::swap_a_to_b(
 			sui_coin,
