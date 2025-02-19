@@ -8,18 +8,8 @@ module dexcelerate::slot {
 
 	use sui::balance::{Self, Balance};
 	use sui::coin::{Self, Coin};
-	use sui::sui::{SUI};
 
-	use flow_x::factory::{Container};
-	use blue_move::swap::{Dex_Info};
-	use move_pump::move_pump::{Configuration};
-	use turbos_clmm::pool::{Pool as TPool, Versioned};
-	use cetus_clmm::config::{GlobalConfig};
-	use cetus_clmm::pool::{Pool as CPool};
-
-	use dexcelerate::swap_router;
-	use dexcelerate::platform_permission::{Self, Platform};
-	use dexcelerate::utils;
+	use dexcelerate::platform::{Self, Platform};
 
 	const ENotASlotOwner: u64 = 0;
 	const ESlotHasNoType: u64 = 1;
@@ -31,23 +21,9 @@ module dexcelerate::slot {
 		balances: Bag
 	}
 
-	// Events
-
-	public struct SlotCreated has copy, drop, store {
+	public struct SlotInitialized has copy, drop, store {
+		owner: address,
 		slot: address,
-		owner: address
-	}
-
-	public struct Deposit has copy, drop, store {
-		slot: address,
-		token: String,
-		amount: u64
-	}
-
-	public struct Withdraw has copy, drop, store {
-		slot: address,
-		token: String,
-		amount: u64
 	}
 
 	public entry fun create(ctx: &mut TxContext) {
@@ -57,183 +33,12 @@ module dexcelerate::slot {
 			balances: bag::new(ctx)
 		};
 
-		event::emit(SlotCreated {
+		event::emit(SlotInitialized {
+			owner: ctx.sender(),
 			slot: object::id_address(&slot),
-			owner: ctx.sender()
 		});
 
 		transfer::public_share_object(slot);
-	}
-
-	public entry fun deposit_base(
-		slot: &mut Slot, 
-		coin_in: Coin<SUI>, 
-	) {
-		event::emit(Deposit {		
-			slot: object::id_address(slot),
-			token: type_name::get<SUI>().into_string(),
-			amount: coin_in.value()
-		});
-
-		add_to_balance<SUI>(slot, coin_in.into_balance<SUI>());
-	}
-
-	public entry fun withdraw_base(
-		slot: &mut Slot, 
-		amount: u64, 
-		ctx: &mut TxContext
-	) {
-		let coin_out = take_from_balance_with_sender<SUI>(slot, amount, ctx);
-		withdraw_after_swap<SUI>(
-			slot, coin_out, ctx
-		);
-	}
-
-	#[allow(lint(self_transfer))]
-	fun withdraw_after_swap<T>(
-		slot: &Slot,
-		base_coin: Coin<SUI>,
-		ctx: &TxContext
-	) {
-		event::emit(Withdraw {		
-			slot: object::id_address(slot),
-			token: type_name::get<T>().into_string(),
-			amount: base_coin.value()
-		});
-
-		transfer::public_transfer(base_coin, ctx.sender());
-	}
-
-	public entry fun deposit_v2<T>(
-		slot: &mut Slot, 
-		coin_in: Coin<T>, 
-		container: &mut Container, // flow_x
-		dex_info: &mut Dex_Info, // blue_move
-		config: &mut Configuration, // move_pump
-		protocol_id: u8, // 0 or 1 or 2
-		clock: &Clock,
-		ctx: &mut TxContext
-	) {
-		utils::not_base<T>();
-
-		let (base_out, coin_in_left) = swap_router::swap_base_v2<T>(
-			coin_in, coin::zero<SUI>(ctx), 0, // ! amount_min_out
-			container, dex_info, config, protocol_id,
-			clock, ctx
-		);
-
-		transfer::public_transfer(coin_in_left, ctx.sender());
-		deposit_base(slot, base_out);
-	}
-
-	public entry fun withdraw_v2<T>(
-		slot: &mut Slot, 
-		amount: u64, 
-		container: &mut Container, // flow_x
-		dex_info: &mut Dex_Info, // blue_move
-		config: &mut Configuration, // move_pump
-		protocol_id: u8, // 0 or 1 or 2
-		clock: &Clock,
-		ctx: &mut TxContext
-	) {
-		utils::not_base<T>();
-
-		let coin_in = take_from_balance_with_sender<T>(slot, amount, ctx);
-
-		let (base_out, coin_in_left) = swap_router::swap_base_v2<T>(
-			coin_in, coin::zero<SUI>(ctx), 0, // ! amount_min_out
-			container, dex_info, config, protocol_id,
-			clock, ctx
-		);
-
-		add_to_balance<T>(slot, coin_in_left.into_balance<T>());	
-
-		withdraw_after_swap<SUI>(
-			slot, base_out, ctx
-		);
-	}
-
-	public entry fun deposit_v3_turbos<T, FeeType>(
-		slot: &mut Slot,
-		pool: &mut TPool<T, SUI, FeeType>,
-		coin_in: Coin<T>,
-		versioned: &Versioned,
-		clock: &Clock,
-		ctx: &mut TxContext
-	) {
-		utils::not_base<T>();
-
-		let (coin_a, coin_b) = swap_router::swap_v3_turbos<T, SUI, FeeType>(
-			coin_in, coin::zero<SUI>(ctx),
-			pool,
-			versioned, clock, ctx
-		);
-
-		transfer::public_transfer(coin_a, ctx.sender());
-		deposit_base(slot, coin_b);
-	}
-
-	public entry fun withdraw_v3_turbos<T, FeeType>(
-		slot: &mut Slot,
-		pool: &mut TPool<T, SUI, FeeType>,
-		amount: u64,
-		versioned: &Versioned,
-		clock: &Clock,
-		ctx: &mut TxContext
-	) {
-		utils::not_base<T>();
-
-		let (coin_a, coin_b) = swap_router::swap_v3_turbos<T, SUI, FeeType>(
-			take_from_balance_with_sender<T>(slot, amount, ctx), coin::zero<SUI>(ctx),
-			pool,
-			versioned, clock, ctx
-		);
-
-		add_to_balance<T>(slot, coin_a.into_balance<T>());
-
-		withdraw_after_swap<SUI>(
-			slot, coin_b, ctx
-		);
-	}
-
-	public entry fun deposit_v3_cetus<T>(
-		slot: &mut Slot,
-		coin_in: Coin<T>,
-		config: &GlobalConfig,
-		pool: &mut CPool<T, SUI>,
-		clock: &Clock,
-		ctx: &mut TxContext
-	) {
-		utils::not_base<T>();
-
-		let (coin_a, coin_b) = swap_router::swap_v3_cetus<T, SUI>(
-			coin_in, coin::zero<SUI>(ctx),
-			config, pool, clock, ctx
-		);
-
-		transfer::public_transfer(coin_a, ctx.sender());
-		deposit_base(slot, coin_b);
-	}
-
-	public entry fun withdraw_v3_cetus<T>(
-		slot: &mut Slot,
-		amount: u64,
-		config: &GlobalConfig,
-		pool: &mut CPool<T, SUI>,
-		clock: &Clock,
-		ctx: &mut TxContext
-	) {
-		utils::not_base<T>();
-
-		let (coin_a, coin_b) = swap_router::swap_v3_cetus<T, SUI>(
-			take_from_balance_with_sender<T>(slot, amount, ctx), coin::zero<SUI>(ctx),
-			config, pool, clock, ctx
-		);
-
-		transfer::public_transfer(coin_a, ctx.sender());
-		withdraw_after_swap<SUI>(
-			slot, coin_b, ctx
-		);
 	}
 
 	public(package) fun add_to_balance<T>(slot: &mut Slot, balance: Balance<T>) {
@@ -264,8 +69,8 @@ module dexcelerate::slot {
 		clock: &Clock,
 		ctx: &mut TxContext
 	): Coin<T> {
-		let has_permission = platform_permission::has_permission(
-			platform, slot.get_owner(), clock, ctx
+		let has_permission = platform::has_permission(
+			platform, slot.owner(), clock, ctx
 		);
 
 		if(!has_permission) {
@@ -290,7 +95,7 @@ module dexcelerate::slot {
 		coin::from_balance<T>(taken, ctx)
 	}
 
-	public fun get_owner(slot: &Slot): address {
+	public fun owner(slot: &Slot): address {
 		*&slot.owner
 	}
 

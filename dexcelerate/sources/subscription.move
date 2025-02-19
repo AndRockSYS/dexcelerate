@@ -1,53 +1,48 @@
-/*
-	Remove withdraw at all, 
-	because all the coins are splitted into fee and bank modules, 
-	so they can be withdrawn from over there
-*/
-
 module dexcelerate::subscription {
 	use std::ascii::{String};
 
+	use sui::clock::{Clock};
 	use sui::event;
-	use sui::bag::{Self, Bag};
 
 	use sui::sui::{SUI};
-	use sui::coin::{Coin};
+	use sui::coin::{Self, Coin};
 
-	use dexcelerate::slot::{Self, Slot};
+	use flow_x::factory::{Container};
+	use blue_move::swap::{Dex_Info};
+	use move_pump::move_pump::{Configuration};
+	use cetus_clmm::config::{GlobalConfig};
+	use cetus_clmm::pool::{Pool as CPool};
+	use turbos_clmm::pool::{Pool as TPool, Versioned as TVersioned};
+	use flowx_clmm::pool::{Pool as FPool};
+    use flowx_clmm::versioned::{Versioned as FVersioned};
+
+	use dexcelerate::slot::{Slot};
 	use dexcelerate::bank::{Self, Bank};
 	use dexcelerate::fee::{Self, FeeManager};
 
-	use blue_move::swap::{Dex_Info};
-	use dexcelerate::blue_move_protocol;
+	use dexcelerate::slot_swap_amm;
+	use dexcelerate::cetus_clmm_protocol;
+	use dexcelerate::turbos_clmm_protocol;
+	use dexcelerate::flow_x_clmm_protocol;
 
-	const ENotASubscriber: u64 = 0;
+	const ECannotUseSlotToSubscribe: u64 = 0;
 
 	public struct CollectorCap has key, store {
 		id: UID
 	}
-	
-	public struct Subscription has key, store {
-		id: UID,
-		subscribers: Bag,
-	}
 
 	// Events
-
-	public struct CollectorUpdated has copy, drop, store {
-		new_collector: address
-	}
 
 	public struct Payment has copy, drop, store {
 		payment_info: String,
 		amount: u64
 	}
 
-	fun init(ctx: &mut TxContext) {
-		transfer::public_share_object(Subscription {
-			id: object::new(ctx),
-			subscribers: bag::new(ctx)
-		});
+	public struct CollectorUpdated has copy, drop, store {
+		new_collector: address
+	}
 
+	fun init(ctx: &mut TxContext) {
 		set_collector(CollectorCap {
 			id: object::new(ctx)
 		}, ctx.sender())
@@ -65,139 +60,333 @@ module dexcelerate::subscription {
 	}
 
 	public entry fun subsribe_sui(
-		subscription: &mut Subscription,
-		fee_manager: &mut FeeManager,
+		slot: &mut Slot,
+		amount: u64,
+
 		bank: &mut Bank,
-		item_info: String,
-		payment: Coin<SUI>,
+		fee_manager: &mut FeeManager,
 		user_fee_percent: u64,
+
+		item_info: String,
+
 		ctx: &mut TxContext
 	) {
 		split_and_pay_with_sui(
-			fee_manager,
-			bank, 
-			item_info,
-			payment, 
-			user_fee_percent,
-			ctx
+			take_from_slot_for_subscription(slot, amount, false, ctx),
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
 		);
-
-		bag::add<address, bool>(&mut subscription.subscribers, ctx.sender(), true);
-	}
-
-	public entry fun subscribe<T>(
-		subscription: &mut Subscription,
-		fee_manager: &mut FeeManager,
-		bank: &mut Bank,
-		item_info: String,
-		payment: Coin<T>,
-		user_fee_percent: u64,
-		dex_info: &mut Dex_Info,
-		amount_out_min: u64,
-		ctx: &mut TxContext
-	) {
-		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input(
-			payment,
-			amount_out_min,
-			dex_info,
-			ctx
-		);
-
-		split_and_pay_with_sui(
-			fee_manager,
-			bank, 
-			item_info,
-			coin_out, 
-			user_fee_percent,
-			ctx
-		);
-
-		bag::add<address, bool>(&mut subscription.subscribers, ctx.sender(), true);
-	}
-
-	public entry fun unsubscribe(
-		subscription: &mut Subscription,
-		ctx: &mut TxContext
-	) {
-		assert!(bag::contains<address>(&subscription.subscribers, ctx.sender()), ENotASubscriber);
-		bag::remove<address, bool>(&mut subscription.subscribers, ctx.sender());
 	}
 
 	public entry fun collect_sui(
 		_: &CollectorCap,
-		subscription: &mut Subscription,
-		fee_manager: &mut FeeManager,
-		bank: &mut Bank,
-		item_info: String,
-		user_slot: &mut Slot,
+
+		slot: &mut Slot,
 		amount: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
 		user_fee_percent: u64,
+
+		item_info: String,
+
 		ctx: &mut TxContext
 	) {
-		assert!(bag::contains<address>(&subscription.subscribers, slot::get_owner(user_slot)), ENotASubscriber);
-
-		let balance_amount = slot::balance<SUI>(user_slot);
-		if(balance_amount < amount) {
-			bag::remove<address, bool>(&mut subscription.subscribers, slot::get_owner(user_slot));
-			return
-		};
-
-		let sui_coin = slot::take_from_balance<SUI>(user_slot, amount, ctx);
 		split_and_pay_with_sui(
-			fee_manager,
-			bank, 
-			item_info,
-			sui_coin, 
-			user_fee_percent,
-			ctx
+			take_from_slot_for_subscription(slot, amount, true, ctx),
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
 		);
 	}
 
-	public entry fun collect<T>(
-		_: &CollectorCap,
-		subscription: &mut Subscription,
-		fee_manager: &mut FeeManager,
-		bank: &mut Bank,
-		item_info: String,
-		user_slot: &mut Slot,
-		amount: u64,
-		user_fee_percent: u64,
-		dex_info: &mut Dex_Info,
+	public entry fun subscribe_amm<T>(
+		slot: &mut Slot,
+		amount_in: u64,
 		amount_out_min: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		user_fee_percent: u64,
+
+		container: &mut Container, // flow_x
+		dex_info: &mut Dex_Info, // blue_move
+		config: &mut Configuration, // move_pump
+		protocol_id: u8, // 0 or 1 or 2
+
+		item_info: String,
+
+		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		assert!(bag::contains<address>(&subscription.subscribers, slot::get_owner(user_slot)), ENotASubscriber);
-
-		let balance_amount = slot::balance<T>(user_slot);
-		if(balance_amount < amount) {
-			bag::remove<address, bool>(&mut subscription.subscribers, slot::get_owner(user_slot));
-			return
-		};
-
-		let sui_coin = slot::take_from_balance<T>(user_slot, amount, ctx);
-		let coin_out: Coin<SUI> = blue_move_protocol::swap_exact_input(
-			sui_coin,
+		let (base_out, coin_out) = slot_swap_amm::swap_base_amm_no_fees<T>(
+			coin::zero<SUI>(ctx), take_from_slot_for_subscription(slot, amount_in, false, ctx),
 			amount_out_min,
-			dex_info,
-			ctx
+			container, dex_info, config, protocol_id,
+			clock, ctx
 		);
+
+		slot.add_to_balance<T>(coin_out.into_balance());
 
 		split_and_pay_with_sui(
-			fee_manager,
-			bank, 
-			item_info,
-			coin_out, 
-			user_fee_percent,
-			ctx
+			base_out, 
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
 		);
+	}
+
+	public entry fun collect_amm<T>(
+		_: &CollectorCap,
+
+		slot: &mut Slot,
+		amount_in: u64,
+		amount_out_min: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		user_fee_percent: u64,
+
+		container: &mut Container, // flow_x
+		dex_info: &mut Dex_Info, // blue_move
+		config: &mut Configuration, // move_pump
+		protocol_id: u8, // 0 or 1 or 2
+
+		item_info: String,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let (base_out, coin_out) = slot_swap_amm::swap_base_amm_no_fees<T>(
+			coin::zero<SUI>(ctx), take_from_slot_for_subscription(slot, amount_in, true, ctx),
+			amount_out_min,
+			container, dex_info, config, protocol_id,
+			clock, ctx
+		);
+
+		slot.add_to_balance<T>(coin_out.into_balance());
+
+		split_and_pay_with_sui(
+			base_out, 
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
+		);
+	}
+
+	public entry fun subscribe_cetus<T>(
+		slot: &mut Slot,
+		amount_in: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		user_fee_percent: u64,
+
+		pool: &mut CPool<T, SUI>,
+		config: &GlobalConfig,
+
+		item_info: String,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let (coin_out, base_out) = cetus_clmm_protocol::swap<T, SUI>(
+			pool, 
+			take_from_slot_for_subscription(slot, amount_in, false, ctx), coin::zero<SUI>(ctx), 
+			config, clock, ctx
+		);
+
+		slot.add_to_balance<T>(coin_out.into_balance());
+
+		split_and_pay_with_sui(
+			base_out, 
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
+		);
+	}
+
+	public entry fun collect_cetus<T>(
+		_: &CollectorCap,
+
+		slot: &mut Slot,
+		amount_in: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		user_fee_percent: u64,
+
+		pool: &mut CPool<T, SUI>,
+		config: &GlobalConfig,
+
+		item_info: String,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let (coin_out, base_out) = cetus_clmm_protocol::swap<T, SUI>(
+			pool, 
+			take_from_slot_for_subscription(slot, amount_in, true, ctx), coin::zero<SUI>(ctx), 
+			config, clock, ctx
+		);
+
+		slot.add_to_balance<T>(coin_out.into_balance());
+
+		split_and_pay_with_sui(
+			base_out, 
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
+		);
+	}
+
+	public entry fun subscribe_turbos<T, FeeType>(
+		slot: &mut Slot,
+		amount_in: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		user_fee_percent: u64,
+
+		pool: &mut TPool<T, SUI, FeeType>,
+		versioned: &TVersioned,
+
+		item_info: String,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+
+		let (coin_out, base_out) = turbos_clmm_protocol::swap<T, SUI, FeeType>(
+			pool, 
+			take_from_slot_for_subscription(slot, amount_in, false, ctx), coin::zero<SUI>(ctx),
+			versioned, clock, ctx
+		);
+
+		slot.add_to_balance<T>(coin_out.into_balance());
+
+		split_and_pay_with_sui(
+			base_out, 
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
+		);
+	}
+
+	public entry fun collect_turbos<T, FeeType>(
+		_: &CollectorCap,
+
+		slot: &mut Slot,
+		amount_in: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		user_fee_percent: u64,
+
+		pool: &mut TPool<T, SUI, FeeType>,
+		versioned: &TVersioned,
+
+		item_info: String,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+
+		let (coin_out, base_out) = turbos_clmm_protocol::swap<T, SUI, FeeType>(
+			pool, 
+			take_from_slot_for_subscription(slot, amount_in, true, ctx), coin::zero<SUI>(ctx),
+			versioned, clock, ctx
+		);
+
+		slot.add_to_balance<T>(coin_out.into_balance());
+
+		split_and_pay_with_sui(
+			base_out, 
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
+		);
+	}
+
+	public entry fun subscribe_flow_x_clmm<T>(
+		slot: &mut Slot,
+		amount_in: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		user_fee_percent: u64,
+
+		pool: &mut FPool<T, SUI>,
+		versioned: &mut FVersioned,
+
+		item_info: String,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let (coin_out, base_out) = flow_x_clmm_protocol::swap<T, SUI>(
+			pool,
+			take_from_slot_for_subscription(slot, amount_in, false, ctx), coin::zero<SUI>(ctx),
+			versioned, clock, ctx
+		);
+
+		slot.add_to_balance<T>(coin_out.into_balance());
+
+		split_and_pay_with_sui(
+			base_out, 
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
+		);
+	}
+
+	public entry fun collect_flow_x_clmm<T>(
+		_: &CollectorCap,
+
+		slot: &mut Slot,
+		amount_in: u64,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
+		user_fee_percent: u64,
+
+		pool: &mut FPool<T, SUI>,
+		versioned: &mut FVersioned,
+
+		item_info: String,
+
+		clock: &Clock,
+		ctx: &mut TxContext
+	) {
+		let (coin_out, base_out) = flow_x_clmm_protocol::swap<T, SUI>(
+			pool,
+			take_from_slot_for_subscription(slot, amount_in, true, ctx), coin::zero<SUI>(ctx),
+			versioned, clock, ctx
+		);
+
+		slot.add_to_balance<T>(coin_out.into_balance());
+
+		split_and_pay_with_sui(
+			base_out, 
+			bank, fee_manager, user_fee_percent,
+			item_info, ctx
+		);
+	}
+
+	fun take_from_slot_for_subscription<T>(
+		slot: &mut Slot,
+		amount: u64,
+		is_collector: bool,
+		ctx: &mut TxContext
+	): Coin<T> {
+		if(is_collector && ctx.sender() != slot.owner()) {
+			abort(ECannotUseSlotToSubscribe)
+		};
+
+		slot.take_from_balance<T>(amount, ctx)
 	}
 
 	fun split_and_pay_with_sui(
-		fee_manager: &mut FeeManager,
-		bank: &mut Bank,
-		item_info: String,
 		mut payment: Coin<SUI>,
+
+		bank: &mut Bank,
+		fee_manager: &mut FeeManager,
 		user_fee_percent: u64,
+
+		item_info: String,
+		
 		ctx: &mut TxContext
 	) {
 		let user_fee = ((payment.value() as u128) * (user_fee_percent as u128) / 100_000) as u64;

@@ -26,7 +26,8 @@ module dexcelerate::bank {
 	public struct Bank has key, store {
 		id: UID,
 		balance: Balance<SUI>,
-		coupons: Bag
+		coupons: Bag,
+		signer_public_key: vector<u8>
 	}
 
 	// Events
@@ -41,7 +42,7 @@ module dexcelerate::bank {
 		new_signer: address
 	}
 
-	public struct UserFeePayed has copy, drop, store {
+	public struct UserFeeAmount has copy, drop, store {
 		amount: u64
 	}
 
@@ -63,20 +64,31 @@ module dexcelerate::bank {
 		transfer::public_share_object(Bank {
 			id: object::new(ctx),
 			balance: balance::zero<SUI>(),
-			coupons: bag::new(ctx)
+			coupons: bag::new(ctx),
+			signer_public_key: vector::empty<u8>()
 		});
 
-		set_signer(BankSignerCap {
+		transfer::public_transfer(BankSignerCap {
 			id: object::new(ctx)
-		}, ctx.sender())
+		}, ctx.sender());
+
+		event::emit(SignerUpdated {
+			new_signer: ctx.sender()
+		});
 	}
 
+	// need to call after init to set everything up
 	public entry fun set_signer(
+		bank: &mut Bank,
 		signer_cap: BankSignerCap, 
-		new_signer: address
+		new_signer: address,
+		new_public_key: vector<u8>
 	) {
 		assert!(new_signer != @0x0, EZeroAddress);
+
+		*&mut bank.signer_public_key = new_public_key;
 		transfer::public_transfer(signer_cap, new_signer);
+
 		event::emit(SignerUpdated {new_signer});
 	}
 
@@ -89,7 +101,7 @@ module dexcelerate::bank {
 			sender: ctx.sender(),
 			value: coin.value()
 		});
-		event::emit(UserFeePayed {
+		event::emit(UserFeeAmount {
 			amount: coin.value()
 		});
 		balance::join<SUI>(&mut bank.balance, coin.into_balance());
@@ -97,7 +109,6 @@ module dexcelerate::bank {
 
 	public entry fun claim_coupon(
 		bank: &mut Bank,
-		signer_public_key: vector<u8>,
 		signed_coupon: vector<u8>,
 		coupon_hash: vector<u8>,
 		receiver: address,
@@ -117,7 +128,7 @@ module dexcelerate::bank {
 		vector::append<u8>(&mut message, to_bytes<u64>(&expiry));
 		let hashed_message = keccak256(&message);
 
-		assert!(ed25519_verify(&signed_coupon, &signer_public_key, &hashed_message), EInvalidSignature);
+		assert!(ed25519_verify(&signed_coupon, &bank.signer_public_key, &hashed_message), EInvalidSignature);
 
 		withdraw_and_transfer(bank, receiver, amount, ctx);
 		event::emit(Claimed {

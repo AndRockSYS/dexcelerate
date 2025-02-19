@@ -2,13 +2,14 @@
 
 [move]
 version = 3
-manifest_digest = "14015472B23E8EE20AFAA16441EBC11C72918CEFD804B2FB7339269C209BA338"
-deps_digest = "397E6A9F7A624706DBDFEE056CE88391A15876868FD18A88504DA74EB458D697"
+manifest_digest = "6727AF7754B9B07B1FFD4F853F167A183C4FF6BA612587391A700510FFAB944D"
+deps_digest = "52B406A7A21811BEF51751CF88DA0E76DAEFFEAC888D4F4060B1A72BBE7D8D35"
 dependencies = [
   { id = "Sui", name = "Sui" },
   { id = "TurbosCLMM", name = "TurbosCLMM" },
   { id = "cetus", name = "cetus" },
   { id = "flow_x", name = "flow_x" },
+  { id = "flowx_clmm", name = "flowx_clmm" },
   { id = "move_pump", name = "move_pump" },
 ]
 
@@ -87,6 +88,14 @@ dependencies = [
 [[move.package]]
 id = "flow_x"
 source = { local = "../lib/flow_x" }
+
+dependencies = [
+  { id = "Sui", name = "Sui" },
+]
+
+[[move.package]]
+id = "flowx_clmm"
+source = { local = "../lib/flowx_clmm" }
 
 dependencies = [
   { id = "Sui", name = "Sui" },

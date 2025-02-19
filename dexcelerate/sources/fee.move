@@ -32,10 +32,6 @@ module dexcelerate::fee {
 
 	// Events
 
-	public struct FeeManagerCreated has copy, drop, store {
-		manager_address: address
-	}
-
 	public struct Fee has copy, drop, store {
 		amount: u64
 	}
@@ -60,10 +56,6 @@ module dexcelerate::fee {
 			withdraw_counter: empty_addresses,
 			cold: vec_map::empty<address, bool>()
 		};
-
-		event::emit(FeeManagerCreated {
-			manager_address: object::id_address(&manager)
-		});
 
 		transfer::public_share_object(manager);
 		transfer::transfer(FeeManagerWitness {

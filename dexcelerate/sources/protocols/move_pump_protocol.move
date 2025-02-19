@@ -7,37 +7,31 @@ module dexcelerate::move_pump_protocol {
 	use blue_move::swap::{Dex_Info};
 	use move_pump::move_pump::{Self, Configuration};
 
-	public(package) fun sui_to_coin<T>(
+	use dexcelerate::utils;
+
+	public(package) fun swap<T>(
+		coin_in: Coin<T>,
+		sui_in: Coin<SUI>,
+		amount_min_out: u64, 
 		config: &mut Configuration, 
 		dex_info: &mut Dex_Info, 
-		coin_in: Coin<SUI>,
-		amount_min_out: u64, 
 		clock: &Clock, 
 		ctx: &mut TxContext
 	): (Coin<SUI>, Coin<T>) {
-		move_pump::buy_returns<T>(
-			config, 
-			coin_in, 
-			dex_info, 
-			amount_min_out, 
-			clock, 
-			ctx
-		)
-	}
+		utils::check_amounts<T, SUI>(&coin_in, &sui_in);
 
-	public(package) fun sui_from_coin<T>(
-		config: &mut Configuration, 
-		coin_in: Coin<T>, 
-		amount_min_out: u64, 
-		clock: &Clock, 
-		ctx: &mut TxContext
-	): (Coin<SUI>, Coin<T>) {
-		move_pump::sell_returns<T>(
-			config, 
-			coin_in, 
-			amount_min_out, 
-			clock, 
-			ctx
-		)
+		if(coin_in.value() > 0) {
+			sui_in.destroy_zero();
+
+			move_pump::sell_returns<T>(
+				config, coin_in, amount_min_out, clock, ctx
+			)
+		} else {
+			coin_in.destroy_zero();
+
+			move_pump::buy_returns<T>(
+				config, sui_in, dex_info, amount_min_out, clock, ctx
+			)
+		}
 	}
 }
