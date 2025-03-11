@@ -14,7 +14,7 @@ module dexcelerate::slow_swap_flow_x_clmm {
 	use dexcelerate::flow_x_clmm_protocol;
 
 	use dexcelerate::swap_utils;
-	use dexcelerate::utils;
+	use dexcelerate::dex_utils;
 
 	public fun swap_with_base<T>(
 		slot: &mut Slot,
@@ -89,8 +89,8 @@ module dexcelerate::slow_swap_flow_x_clmm {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<A>();
-		utils::not_base<B>();
+		dex_utils::not_base<A>();
+		dex_utils::not_base<B>();
 
 		let mut coin_a_in = coin::zero<A>(ctx);
 		let mut coin_b_in = coin::zero<B>(ctx);

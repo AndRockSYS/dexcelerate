@@ -5,7 +5,7 @@ module dexcelerate::turbos_clmm_protocol {
 	use turbos_clmm::pool::{Pool, Versioned};
 	use turbos_clmm::swap_router;
 
-	use dexcelerate::utils;
+	use dexcelerate::dex_utils;
 
 	const A_TO_B: u128 = 4295048016;
 	const B_TO_A: u128 = 79226673515401279992447579055;
@@ -20,7 +20,7 @@ module dexcelerate::turbos_clmm_protocol {
 		clock: &Clock,
 		ctx: &mut TxContext
 	): (Coin<A>, Coin<B>) {
-		utils::check_amounts<A, B>(&coin_a_in, &coin_b_in);
+		dex_utils::check_amounts<A, B>(&coin_a_in, &coin_b_in);
 
 		let mut coin_a_out = coin::zero<A>(ctx);
 		let mut coin_b_out = coin::zero<B>(ctx);

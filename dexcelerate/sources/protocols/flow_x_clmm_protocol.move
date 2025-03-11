@@ -10,7 +10,7 @@ module dexcelerate::flow_x_clmm_protocol {
     use flowx_clmm::versioned::Versioned;
 	use flowx_clmm::swap_math;
 
-	use dexcelerate::utils;
+	use dexcelerate::dex_utils;
 
 	const A_TO_B: u128 = 4295048016;
 	const B_TO_A: u128 = 79226673515401279992447579055;
@@ -23,7 +23,7 @@ module dexcelerate::flow_x_clmm_protocol {
         clock: &Clock,
         ctx: &mut TxContext
 	): (Coin<A>, Coin<B>) {
-		utils::check_amounts<A, B>(&coin_a_in, &coin_b_in);
+		dex_utils::check_amounts<A, B>(&coin_a_in, &coin_b_in);
 
 		let mut coin_a_out = balance::zero<A>();
 		let mut coin_b_out = balance::zero<B>();

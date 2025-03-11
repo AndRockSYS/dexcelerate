@@ -20,7 +20,7 @@ module dexcelerate::swap_utils {
 
 	use dexcelerate::bank::{Bank};
 	use dexcelerate::fee::{FeeManager};
-	use dexcelerate::utils;
+	use dexcelerate::dex_utils;
 
 	const ENotEnoughToCoverGas: u64 = 0;
 	const ENotSuiToken: u64 = 1;
@@ -33,8 +33,8 @@ module dexcelerate::swap_utils {
 		total_fee_percent: u64,
 		ctx: &mut TxContext
 	) {
-		let total_fee = utils::calculate_fee(payment.value(), total_fee_percent);
-		let user_fee = utils::calculate_fee(total_fee, users_fee_percent);
+		let total_fee = dex_utils::calculate_fee(payment.value(), total_fee_percent);
+		let user_fee = dex_utils::calculate_fee(total_fee, users_fee_percent);
 
 		bank.add_to_bank(payment.split(user_fee, ctx), ctx);
 		fee_manager.add_fee(payment.split(total_fee - user_fee, ctx));
@@ -46,7 +46,7 @@ module dexcelerate::swap_utils {
 		platform: address,
 		ctx: &mut TxContext
 	) {
-		assert!(utils::is_base<T>(), ENotSuiToken);
+		assert!(dex_utils::is_base<T>(), ENotSuiToken);
 
 		if(gas_amount > 0) {
 			assert!(coin.value() >= gas_amount, ENotEnoughToCoverGas);

@@ -7,7 +7,7 @@ module dexcelerate::move_pump_protocol {
 	use blue_move::swap::{Dex_Info};
 	use move_pump::move_pump::{Self, Configuration};
 
-	use dexcelerate::utils;
+	use dexcelerate::dex_utils;
 
 	public(package) fun swap<T>(
 		coin_in: Coin<T>,
@@ -18,7 +18,7 @@ module dexcelerate::move_pump_protocol {
 		clock: &Clock, 
 		ctx: &mut TxContext
 	): (Coin<SUI>, Coin<T>) {
-		utils::check_amounts<T, SUI>(&coin_in, &sui_in);
+		dex_utils::check_amounts<T, SUI>(&coin_in, &sui_in);
 
 		if(coin_in.value() > 0) {
 			sui_in.destroy_zero();

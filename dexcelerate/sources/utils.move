@@ -1,4 +1,4 @@
-module dexcelerate::utils {
+module dexcelerate::dex_utils {
 	use std::type_name;
 	use std::bcs::to_bytes;
 

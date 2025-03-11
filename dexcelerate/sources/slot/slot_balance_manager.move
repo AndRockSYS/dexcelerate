@@ -23,7 +23,7 @@ module dexcelerate::slot_balance_manager {
 	use dexcelerate::cetus_clmm_protocol;
 	use dexcelerate::flow_x_clmm_protocol;
 
-	use dexcelerate::utils;
+	use dexcelerate::dex_utils;
 
 	public struct Deposit has copy, drop, store {
 		to: address,
@@ -70,7 +70,7 @@ module dexcelerate::slot_balance_manager {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<T>();
+		dex_utils::not_base<T>();
 
 		let (base_out, coin_in_left) = slot_swap_amm::swap_base_amm_no_fees<T>(
 			coin::zero<SUI>(ctx), coin_in, 0, // ! amount_min_out
@@ -94,7 +94,7 @@ module dexcelerate::slot_balance_manager {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<T>();
+		dex_utils::not_base<T>();
 
 		let coin_in = slot.take_from_balance_with_sender<T>(amount, ctx);
 
@@ -118,7 +118,7 @@ module dexcelerate::slot_balance_manager {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<T>();
+		dex_utils::not_base<T>();
 
 		let (coin_a, coin_b) = turbos_clmm_protocol::swap<T, SUI, FeeType>(
 			pool, coin_in, coin::zero<SUI>(ctx), versioned, clock, ctx
@@ -138,7 +138,7 @@ module dexcelerate::slot_balance_manager {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<T>();
+		dex_utils::not_base<T>();
 
 		let (coin_a, coin_b) = turbos_clmm_protocol::swap<T, SUI, FeeType>(
 			pool, 
@@ -160,7 +160,7 @@ module dexcelerate::slot_balance_manager {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<T>();
+		dex_utils::not_base<T>();
 
 		let (coin_a, coin_b) = cetus_clmm_protocol::swap<T, SUI>(
 			pool, coin_in, coin::zero<SUI>(ctx),
@@ -181,7 +181,7 @@ module dexcelerate::slot_balance_manager {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<T>();
+		dex_utils::not_base<T>();
 
 		let (coin_a, coin_b) = cetus_clmm_protocol::swap<T, SUI>(
 			pool, 
@@ -203,7 +203,7 @@ module dexcelerate::slot_balance_manager {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<T>();
+		dex_utils::not_base<T>();
 
 		let (coin_a, coin_b) = flow_x_clmm_protocol::swap<T, SUI>(
 			pool, coin_in, coin::zero<SUI>(ctx), versioned, clock, ctx
@@ -223,7 +223,7 @@ module dexcelerate::slot_balance_manager {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<T>();
+		dex_utils::not_base<T>();
 
 		let (coin_a, coin_b) = flow_x_clmm_protocol::swap<T, SUI>(
 			pool, 

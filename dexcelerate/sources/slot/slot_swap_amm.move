@@ -16,7 +16,7 @@ module dexcelerate::slot_swap_amm {
 	use dexcelerate::fee::{FeeManager};
 	use dexcelerate::platform::{Self, Platform};
 
-	use dexcelerate::utils;
+	use dexcelerate::dex_utils;
 	use dexcelerate::swap_utils;
 	
 	public entry fun swap_with_base<T>(
@@ -105,8 +105,8 @@ module dexcelerate::slot_swap_amm {
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {
-		utils::not_base<A>();
-		utils::not_base<B>();
+		dex_utils::not_base<A>();
+		dex_utils::not_base<B>();
 
 		let coin_in = slot.take_from_balance_with_permission<A>(amount_in, platform, clock, ctx);
 
@@ -137,7 +137,7 @@ module dexcelerate::slot_swap_amm {
 		clock: &Clock,
 		ctx: &mut TxContext
 	): (Coin<SUI>, Coin<T>) {
-		utils::check_amounts<SUI, T>(&base_in, &coin_in);
+		dex_utils::check_amounts<SUI, T>(&base_in, &coin_in);
 
 		let mut base_out = coin::zero<SUI>(ctx);
 		let mut coin_out = coin::zero<T>(ctx);
