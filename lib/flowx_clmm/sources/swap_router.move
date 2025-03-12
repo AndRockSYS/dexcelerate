@@ -17,7 +17,7 @@ module flowx_clmm::swap_router {
         pool: &mut Pool<X, Y>,
         coin_in: Coin<X>,
         sqrt_price_limit: u128,
-        versioned: &mut Versioned,
+        versioned: &Versioned,
         clock: &Clock,
         ctx: &TxContext
     ): Balance<Y> {
@@ -28,7 +28,7 @@ module flowx_clmm::swap_router {
         pool: &mut Pool<X, Y>,
         coin_in: Coin<Y>,
         sqrt_price_limit: u128,
-        versioned: &mut Versioned,
+        versioned: &Versioned,
         clock: &Clock,
         ctx: &TxContext
     ): Balance<X> {
@@ -42,7 +42,7 @@ module flowx_clmm::swap_router {
         amount_out_min: u64,
         sqrt_price_limit: u128,
         deadline: u64,
-        versioned: &mut Versioned,
+        versioned: &Versioned,
         clock: &Clock,
         ctx: &mut TxContext
     ): Coin<Y> {
@@ -54,7 +54,7 @@ module flowx_clmm::swap_router {
         coin_in: Coin<X>,
         amount_y_out: u64,
         sqrt_price_limit: u128,
-        versioned: &mut Versioned,
+        versioned: &Versioned,
         clock: &Clock,
         ctx: &mut TxContext
     ): Balance<Y> {
@@ -66,7 +66,7 @@ module flowx_clmm::swap_router {
         coin_in: Coin<Y>,
         amount_x_out: u64,
         sqrt_price_limit: u128,
-        versioned: &mut Versioned,
+        versioned: &Versioned,
         clock: &Clock,
         ctx: &mut TxContext
     ): Balance<X> {
@@ -80,7 +80,7 @@ module flowx_clmm::swap_router {
         amount_out: u64,
         sqrt_price_limit: u128,
         deadline: u64,
-        versioned: &mut Versioned,
+        versioned: &Versioned,
         clock: &Clock,
         ctx: &mut TxContext
     ): Coin<Y> {

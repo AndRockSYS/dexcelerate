@@ -59,7 +59,7 @@ module dexcelerate::swap_utils {
 		coin: &mut Coin<T>,
 		gas_amount: u64,
 		platform: address,
-		versioned: &mut Versioned,
+		versioned: &Versioned,
 		clock: &Clock,
 		ctx: &mut TxContext
 	) {

@@ -19,7 +19,7 @@ module dexcelerate::flow_x_clmm_protocol {
 		pool: &mut Pool<A, B>,
         coin_a_in: Coin<A>,
 		coin_b_in: Coin<B>,
-        versioned: &mut Versioned,
+        versioned: &Versioned,
         clock: &Clock,
         ctx: &mut TxContext
 	): (Coin<A>, Coin<B>) {
